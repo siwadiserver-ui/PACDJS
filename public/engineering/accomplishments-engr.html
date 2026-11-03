@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Engineering Accomplishments</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  
+  <!-- SheetJS para sa Excel Export -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-soft: #f0f9ff;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --purple: #7c3aed;
+      --bg-main: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-sec: #64748b;
+      --border-color: #cbd5e1;
+      --card-border: #e2e8f0;
+    }
+
+    html.dark {
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --primary-soft: #1e293b;
+      --bg-main: #0b1120;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-sec: #94a3b8;
+      --border-color: #334155;
+      --card-border: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Top Toolbar */
+    .module-header {
+      background: var(--card-bg);
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1.5px solid var(--border-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .header-title-badge {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: -0.01em;
+    }
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.45rem 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.15s ease;
+    }
+    .btn-action:hover { opacity: 0.9; }
+    .btn-refresh { background-color: var(--success); }
+    .btn-export { background-color: var(--purple); }
+
+    /* Search & Filter Strip */
+    .search-bar-container {
+      background: var(--card-bg);
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      border-bottom: 1.5px solid var(--border-color);
+      flex-shrink: 0;
+    }
+    .search-input {
+      flex: 1;
+      padding: 0.42rem 0.75rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-main);
+      background: var(--card-bg);
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--primary); }
+    .filter-group { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; color: var(--text-sec); }
+    .filter-group select {
+      padding: 0.42rem 0.75rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-main);
+      background: var(--card-bg);
+      outline: none;
+    }
+    .filter-group select:focus { border-color: var(--primary); }
+
+    /* Notebook Tabs */
+    .tabs-nav {
+      display: flex;
+      background: var(--card-bg);
+      padding: 0 1.25rem;
+      border-bottom: 2px solid var(--border-color);
+      flex-shrink: 0;
+      gap: 4px;
+    }
+    .tab-btn {
+      padding: 0.65rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-sec);
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-btn:hover:not(.active) { color: var(--text-main); background: var(--bg-main); }
+
+    /* Tables Container */
+    .tab-content { display: none; flex: 1; padding: 0.85rem 1.25rem; background: var(--bg-main); overflow: hidden; }
+    .tab-content.active { display: flex; flex-direction: column; }
+    .table-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      flex: 1;
+      overflow: auto;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: nowrap; }
+    th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-main);
+      color: var(--text-sec);
+      font-weight: 800;
+      text-align: left;
+      padding: 0.6rem 0.85rem;
+      border-bottom: 2px solid var(--border-color);
+      border-right: 1px solid var(--card-border);
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      letter-spacing: 0.03em;
+      z-index: 10;
+    }
+    td { padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--card-border); border-right: 1px solid var(--card-border); color: var(--text-main); }
+    tr:nth-child(even) td { background-color: rgba(241, 245, 249, 0.4); }
+    tr:hover td { background-color: var(--primary-soft) !important; cursor: pointer; }
+
+    .status-badge { padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 0.68rem; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+  </style>
+
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('pacd_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <header class="module-header">
+    <div class="header-title-badge">
+      <i class='bx bx-bar-chart-alt-2'></i> ENGINEERING ACCOMPLISHMENTS
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-action btn-refresh" onclick="loadAllData()"><i class='bx bx-refresh'></i> Refresh</button>
+      <button type="button" class="btn-action btn-export" onclick="exportActiveTab()"><i class='bx bx-file'></i> Export Active Tab</button>
+    </div>
+  </header>
+
+  <div class="search-bar-container">
+    <div style="font-weight: 800; font-size: 0.78rem; color: var(--text-sec); display: flex; align-items: center; gap: 4px;">
+      <i class='bx bx-search'></i> Universal Search:
+    </div>
+    <input type="text" id="searchInput" class="search-input" placeholder="Search reference, plumber name, date, remarks, materials..." oninput="filterTables()">
+    
+    <div class="filter-group">
+      <label>Year:</label>
+      <select id="selYear" onchange="filterTables()">
+        <option value="ALL">ALL</option>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label>Month:</label>
+      <select id="selMonth" onchange="filterTables()">
+        <option value="ALL">ALL</option>
+        <option value="01">January</option>
+        <option value="02">February</option>
+        <option value="03">March</option>
+        <option value="04">April</option>
+        <option value="05">May</option>
+        <option value="06">June</option>
+        <option value="07">July</option>
+        <option value="08">August</option>
+        <option value="09">September</option>
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="tabs-nav">
+    <button type="button" class="tab-btn active" onclick="switchTab('srTab', this)"><i class='bx bx-wrench'></i> Service Requests</button>
+    <button type="button" class="tab-btn" onclick="switchTab('reconTab', this)"><i class='bx bx-plug'></i> Reconnections</button>
+    <button type="button" class="tab-btn" onclick="switchTab('nscTab', this)"><i class='bx bx-droplet'></i> New Connections</button>
+  </div>
+
+  <!-- TAB 1: Service Requests -->
+  <main id="srTab" class="tab-content active">
+    <div class="table-card">
+      <table id="tblSR">
+        <thead>
+          <tr>
+            <th>Ref #</th>
+            <th>Account Name</th>
+            <th>Address</th>
+            <th>Req Date</th>
+            <th>Complaint</th>
+            <th>Action Taken</th>
+            <th>Materials Used</th>
+            <th>Completion Date</th>
+            <th>Performed By (Plumbers)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="bodySR"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- TAB 2: Reconnections -->
+  <main id="reconTab" class="tab-content">
+    <div class="table-card">
+      <table id="tblRecon">
+        <thead>
+          <tr>
+            <th>Ref #</th>
+            <th>Account Name</th>
+            <th>Address</th>
+            <th>Old Meter #</th>
+            <th>New Meter #</th>
+            <th>OR #</th>
+            <th>Recon Date</th>
+            <th>Meter Status</th>
+            <th>Reconnected By (Plumbers)</th>
+            <th>Plumber Remarks</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="bodyRecon"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- TAB 3: New Connections -->
+  <main id="nscTab" class="tab-content">
+    <div class="table-card">
+      <table id="tblNSC">
+        <thead>
+          <tr>
+            <th>App #</th>
+            <th>Applicant Name</th>
+            <th>Address</th>
+            <th>Contact #</th>
+            <th>OR #</th>
+            <th>Installation Date</th>
+            <th>Assigned Plumbers</th>
+            <th>Materials Used</th>
+            <th>Plumber Remarks</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="bodyNSC"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/engineering/accomplishments-engr.js"></script>
+</body>
+</html>

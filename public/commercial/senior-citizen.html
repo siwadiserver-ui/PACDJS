@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Senior Citizen Discount Application - SIWADI PACD</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <!-- SheetJS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif; 
+    }
+    body { 
+      background-color: #f1f5f9; 
+      color: #0f172a; 
+      height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      overflow: hidden; 
+    }
+
+    /* Single Clean Header */
+    .module-header {
+      background-color: #ffffff;
+      border-bottom: 1.5px solid #cbd5e1;
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      flex-shrink: 0;
+    }
+    .header-title-box {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .header-title-box h2 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .header-title-box p {
+      font-size: 0.72rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .search-input {
+      padding: 0.5rem 0.85rem;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #0f172a;
+      outline: none;
+      width: 260px;
+      background-color: #ffffff;
+      transition: border-color 0.15s;
+    }
+    .search-input:focus {
+      border-color: #d97706;
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+    }
+
+    /* Workspace Split */
+    .workspace { 
+      display: grid; 
+      grid-template-columns: 460px 1fr; 
+      gap: 0.85rem; 
+      padding: 0.85rem 1.25rem; 
+      flex: 1; 
+      overflow: hidden; 
+    }
+    .panel-card { 
+      background: #ffffff; 
+      border: 1.5px solid #cbd5e1; 
+      border-radius: 8px; 
+      display: flex; 
+      flex-direction: column; 
+      overflow: hidden; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .panel-title { 
+      background: #f8fafc; 
+      padding: 0.65rem 0.95rem; 
+      font-size: 0.82rem; 
+      font-weight: 800; 
+      color: #b45309; 
+      border-bottom: 1.5px solid #cbd5e1; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .form-scroll-body { 
+      padding: 1rem; 
+      overflow-y: auto; 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 8px; 
+    }
+    .form-row { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 10px; }
+    .form-row label { font-size: 0.8rem; font-weight: 700; color: #334155; }
+    .form-row input, .form-row select, .form-row textarea {
+      width: 100%; padding: 0.45rem 0.75rem; border: 1.5px solid #cbd5e1; border-radius: 6px; 
+      font-size: 0.82rem; font-weight: 600; text-transform: uppercase; outline: none; background: #ffffff; color: #0f172a;
+    }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+      border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,0.15);
+    }
+    .ref-input { font-size: 1.05rem !important; font-weight: 800 !important; color: #dc2626 !important; }
+
+    .acc-triple-box { display: grid; grid-template-columns: 1fr 45px 1fr; gap: 4px; align-items: center; }
+    .acc-triple-box input { text-align: center; font-weight: 700; }
+
+    .photo-upload-wrapper { display: flex; align-items: center; gap: 12px; padding: 6px 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; background: #f8fafc; }
+    .preview-box { width: 55px; height: 55px; border: 1.5px solid #cbd5e1; display: flex; align-items: center; justify-content: center; background: #fff; overflow: hidden; border-radius: 6px; flex-shrink: 0; }
+    .preview-box img { width: 100%; height: 100%; object-fit: cover; }
+    .btn-file-custom {
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; font-size: 0.76rem; font-weight: 700;
+      background: #fff; border: 1.5px solid #cbd5e1; border-radius: 6px; cursor: pointer; color: #334155; transition: all 0.15s ease;
+    }
+    .btn-file-custom:hover { background: #f1f5f9; }
+
+    .chk-container { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; background: #f8fafc; }
+    .chk-item { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; cursor: pointer; white-space: nowrap; }
+    .chk-item input { width: 16px; height: 16px; cursor: pointer; accent-color: #b45309; }
+    .id-subgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding-left: 18px; }
+
+    /* Form Actions */
+    .form-actions { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 10px; border-top: 1.5px solid #e2e8f0; }
+    .btn-std { 
+      padding: 0.45rem 0.8rem; font-size: 0.76rem; font-weight: 700; border: 1.5px solid #cbd5e1; 
+      border-radius: 6px; cursor: pointer; background: #ffffff; color: #334155; display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s ease; 
+    }
+    .btn-std:hover { background: #f1f5f9; }
+    .btn-save { background: #d97706; color: #fff; border-color: #d97706; }
+    .btn-save:hover { background: #b45309; }
+    .btn-print { background: #0284c7; color: #fff; border-color: #0284c7; }
+    .btn-print:hover { background: #0369a1; }
+    .btn-delete { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+    .btn-delete:hover { background: #fecaca; }
+
+    /* Pool Table */
+    .table-container { flex: 1; overflow: auto; }
+    table.data-pool-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: nowrap; }
+    table.data-pool-table th { 
+      position: sticky; top: 0; background: #f8fafc; color: #334155; font-weight: 800; 
+      text-align: left; padding: 0.6rem 0.85rem; border-bottom: 2px solid #cbd5e1; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.03em;
+    }
+    table.data-pool-table td { padding: 0.65rem 0.85rem; border-bottom: 1px solid #e2e8f0; color: #0f172a; }
+    table.data-pool-table tr:hover td { background-color: #fef3c7; cursor: pointer; }
+
+    .st-badge { padding: 2px 7px; border-radius: 4px; font-size: 0.68rem; font-weight: 800; }
+    .st-active { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .st-near { background: #fef3c7; color: #854d0e; border: 1px solid #fde047; }
+    .st-expired { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+    /* Custom Context Menu */
+    .context-menu {
+      position: fixed; z-index: 3000; width: 180px; background: #ffffff; border: 1.5px solid #cbd5e1;
+      border-radius: 6px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); display: none; flex-direction: column; padding: 4px 0;
+    }
+    .context-menu-item { padding: 8px 14px; font-size: 0.78rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .context-menu-item:hover { background: #fef3c7; color: #b45309; }
+    .context-menu-item.danger { color: #dc2626; }
+    .context-menu-item.danger:hover { background: #fee2e2; color: #991b1b; }
+
+    /* A4 Print Layout */
+    #printArea { display: none; }
+    @media print {
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea {
+        display: block !important;
+        position: absolute; left: 0; top: 0; width: 210mm; min-height: 297mm;
+        padding: 15mm 20mm; background: #fff; color: #000; font-family: Arial, sans-serif;
+      }
+      @page { size: A4 portrait; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Custom Context Menu for CRUD Operations -->
+  <div id="customContextMenu" class="context-menu">
+    <div class="context-menu-item" onclick="triggerEditFromContext()"><i class='bx bx-edit'></i> ✏️ Edit Record</div>
+    <div class="context-menu-item" onclick="triggerPrintFromContext()"><i class='bx bx-printer'></i> 🖨️ Print Form</div>
+    <div class="context-menu-item danger" onclick="triggerDeleteFromContext()"><i class='bx bx-trash'></i> 🗑️ Delete Record</div>
+  </div>
+
+  <!-- Single Clean Sub-Header (Walang redundant Main Menu button) -->
+  <header class="module-header">
+    <div class="header-title-box">
+      <h2><i class='bx bx-user-check' style="color: #d97706;"></i> Senior Citizen Discount Module</h2>
+      <p>Pamamahala ng mga aplikasyon at diskwento para sa mga Senior Citizen</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <input type="text" id="searchTableInput" class="search-input" oninput="filterDataPool(this.value)" placeholder="Maghanap ng Senior record...">
+      
+      <!-- 📥 EXPORT TO EXCEL BUTTON -->
+      <button type="button" class="btn-std" onclick="exportSeniorsToExcel()" style="background:#16a34a; color:#fff; border-color:#16a34a;" title="Export view to Excel">
+        <i class='bx bx-spreadsheet'></i> Export to Excel
+      </button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- Entry Panel -->
+    <section class="panel-card">
+      <div class="panel-title">
+        <span id="formHeaderTitle">Senior Citizen Discount Application</span>
+        <span id="editModeIndicator" style="display: none; font-size: 0.72rem; background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px;">EDITING</span>
+      </div>
+      <div class="form-scroll-body">
+        
+        <input type="hidden" id="editingRecordId">
+        <input type="hidden" id="photoBase64">
+
+        <div class="form-row">
+          <label>Customer/Ref #:</label>
+          <input type="text" id="refNumber" class="ref-input">
+        </div>
+
+        <div class="form-row">
+          <label>App. Type:</label>
+          <select id="applicationType">
+            <option value="NEW">NEW APPLICATION</option>
+            <option value="RENEWAL">RENEWAL</option>
+          </select>
+        </div>
+
+        <!-- Account Triple Box -->
+        <div class="form-row">
+          <label>Account No.:</label>
+          <div class="acc-triple-box">
+            <input type="text" id="accPart1" onblur="onAccountEnter()">
+            <input type="text" id="accPart2" value="XXX" readonly>
+            <input type="text" id="accPart3" onblur="onAccountEnter()">
+          </div>
+        </div>
+
+        <div class="form-row"><label>Surname:</label><input type="text" id="surname"></div>
+        <div class="form-row"><label>Firstname:</label><input type="text" id="firstname"></div>
+        <div class="form-row"><label>Middle Name:</label><input type="text" id="middleName"></div>
+        <div class="form-row"><label>Address:</label><textarea id="address" rows="2"></textarea></div>
+        <div class="form-row"><label>Contact No.:</label><input type="text" id="contactNumber"></div>
+
+        <!-- Photo Upload -->
+        <div class="form-row" style="align-items: flex-start;">
+          <label style="margin-top: 6px;">2x2 Photo:</label>
+          <div class="photo-upload-wrapper">
+            <div class="preview-box" id="previewContainer">
+              <span style="font-size: 0.65rem; color: #64748b;">2x2</span>
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <label for="photoInput" class="btn-file-custom"><i class='bx bx-upload'></i> Upload Picture</label>
+              <input type="file" id="photoInput" accept="image/png, image/jpeg" onchange="handlePhotoUpload(this)" style="display: none;">
+              
+              <!-- 👈 DAGDAG ITO: Open Camera Button -->
+              <button type="button" class="btn-file-custom" onclick="openCameraModal()" style="color: #0284c7;">
+                <i class='bx bx-camera'></i> Open Camera
+              </button>
+
+              <!-- 👈 DAGDAG: Quick View / Edit Photo Button -->
+            <button type="button" class="btn-file-custom" onclick="openPhotoViewerModal()" style="color: #d97706;" title="Tingnan o palitan ang litrato sa hiwalay na window">
+              <i class='bx bx-show'></i> View Photo
+            </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🖼️ View & Edit Photo Modal -->
+        <div id="photoViewerModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); z-index: 9998; align-items: center; justify-content: center;">
+          <div style="background: #ffffff; border-radius: 12px; width: 440px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+            <div style="background: #f8fafc; padding: 10px 16px; border-bottom: 1.5px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center;">
+              <strong style="font-size: 0.9rem; color: #0f172a;"><i class='bx bx-image-alt'></i> Senior Citizen Photo Viewer</strong>
+              <button type="button" onclick="closePhotoViewerModal()" style="border: none; background: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            
+            <div style="padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 14px;">
+              <!-- Malaking Photo Display Box -->
+              <div style="width: 240px; height: 240px; border-radius: 8px; overflow: hidden; background: #f1f5f9; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);" id="modalPhotoDisplay">
+                <span style="font-size: 0.8rem; color: #64748b;">Walang Litrato</span>
+              </div>
+
+              <!-- Quick Action Buttons para Palitan ang Litrato -->
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+                <label for="modalPhotoInput" class="btn-file-custom" style="cursor: pointer;">
+                  <i class='bx bx-upload'></i> Change / Upload
+                </label>
+                <input type="file" id="modalPhotoInput" accept="image/png, image/jpeg" onchange="handleModalPhotoUpload(this)" style="display: none;">
+
+                <button type="button" class="btn-file-custom" onclick="openCameraFromModal()" style="color: #0284c7;">
+                  <i class='bx bx-camera'></i> Snap via Camera
+                </button>
+              </div>
+
+              <!-- Footer Buttons -->
+              <div style="display: flex; gap: 10px; width: 100%; justify-content: flex-end; margin-top: 8px; border-top: 1.5px solid #e2e8f0; padding-top: 12px;">
+                <button type="button" class="btn-std" onclick="closePhotoViewerModal()">Close</button>
+                <button type="button" class="btn-std btn-save" id="btnSavePhotoOnly" onclick="savePhotoOnly()">
+                  <i class='bx bx-save'></i> Save Photo Only
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Requirements -->
+        <div class="form-row" style="align-items: flex-start;">
+          <label style="margin-top: 4px;">Requirements:</label>
+          <div class="chk-container">
+            <label class="chk-item"><input type="checkbox" class="chk-req" value="Application Form" checked> Application Form</label>
+            <label class="chk-item"><input type="checkbox" class="chk-req" value="Proof of Ownership"> Proof of Ownership</label>
+            <label class="chk-item"><input type="checkbox" class="chk-req" value="Real Estate Tax/Tax-Decl"> Real Estate Tax/Tax-Decl</label>
+            <label class="chk-item"><input type="checkbox" class="chk-req" value="Photocopy ID with three signatures" checked> Photocopy ID with 3 signatures</label>
+            
+            <div class="id-subgrid">
+              <label class="chk-item"><input type="checkbox" class="chk-id" value="Senior Citizen ID" checked> Senior Citizen ID</label>
+              <label class="chk-item"><input type="checkbox" class="chk-id" value="Driver's License"> Driver's License</label>
+              <label class="chk-item"><input type="checkbox" class="chk-id" value="Passport"> Passport</label>
+              <label class="chk-item"><input type="checkbox" class="chk-id" value="Barangay ID"> Barangay ID</label>
+              <label class="chk-item"><input type="checkbox" class="chk-id" value="Postal ID"> Postal ID</label>
+              <label class="chk-item"><input type="checkbox" class="chk-id" value="SSS/GSIS ID"> SSS/GSIS ID</label>
+            </div>
+
+            <div style="border-top: 1.5px dashed #cbd5e1; margin: 4px 0;"></div>
+            <label class="chk-item"><input type="checkbox" id="chkAuthLetter"> Authorization Letter (if Representative)</label>
+            <label class="chk-item"><input type="checkbox" id="chkRepId"> Government ID (if Representative)</label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Date Applied:</label>
+          <input type="date" id="appDate">
+        </div>
+
+        <div class="form-row">
+          <label>Remarks:</label>
+          <textarea id="remarks" rows="2"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-std btn-save" id="btnSave" onclick="saveRecord()">
+            <i class='bx bx-save'></i> Save Record
+          </button>
+          <button type="button" class="btn-std btn-print" onclick="printApplication()">
+            <i class='bx bx-printer'></i> Print A4 Form
+          </button>
+          <!-- 👈 DAGDAG DITO ANG BUTTON PARA SA BLANK FORM -->
+          <button type="button" class="btn-std" onclick="printBlankApplication()" style="background: #475569; color: #fff; border-color: #475569;" title="Mag-print ng blangkong form">
+            <i class='bx bx-file-blank'></i> Print Blank Form
+          </button>
+          <button type="button" class="btn-std btn-delete" id="btnDeleteForm" onclick="deleteCurrentRecord()" style="display: none;">
+            <i class='bx bx-trash'></i> Delete
+          </button>
+          <button type="button" class="btn-std" onclick="clearForm()">
+            Clear / New
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Table Panel -->
+    <section class="panel-card">
+      <div class="panel-title" style="color: #475569; font-size: 0.78rem;">
+        Registered Senior Citizens Discount List (Pindutin ang row para mag-edit o mag-print)
+      </div>
+      <div class="table-container">
+        <table class="data-pool-table">
+          <thead>
+            <tr>
+              <th>Ref #</th>
+              <th>Type</th>
+              <th>Senior Citizen Full Name</th>
+              <th>Account #</th>
+              <th>Applied Date</th>
+              <th>Expiration Date</th>
+              <th>Validity Status</th>
+              <th>Address</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- 🖨️ A4 PRINT FORM TEMPLATE -->
+  <div id="printArea">
+    <!-- Header -->
+    <div style="text-align: center; position: relative;">
+      <img src="/swdlogo.png" style="position: absolute; left: 10px; top: 0; width: 62px; height: 62px; object-fit: contain;" onerror="this.src='/SWDLOGO.png';">
+      <h2 style="margin: 0; font-size: 15pt; font-weight: bold; font-family: 'Segoe UI', Arial, sans-serif;">Siniloan Water District</h2>
+      <p style="margin: 2px 0; font-size: 8.5pt;">SINILOAN, LAGUNA, Philippines, 4014 | Telephone: (049) 511-8572 | Fax No: (049) 521-8578</p>
+      
+      <h3 style="margin-top: 28px; margin-bottom: 8px; font-size: 11pt; font-weight: bold; letter-spacing: 0.5px;">APPLICATION FOR SENIOR CITIZEN DISCOUNT</h3>
+    </div>
+
+    <!-- Applicant Details Table & 2x2 Photo Box -->
+    <div style="display: grid; grid-template-columns: 1fr 140px; gap: 15px; margin-top: 15px;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 9.5pt;" cellpadding="3">
+        <tr>
+          <td style="width: 100px; border: 1px solid #000; padding: 4px 6px; font-weight: bold;">Surname</td>
+          <td style="border: 1px solid #000; padding: 4px 6px;" id="pSurname"></td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #000; padding: 4px 6px; font-weight: bold;">Firstname</td>
+          <td style="border: 1px solid #000; padding: 4px 6px;" id="pFirstname"></td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #000; padding: 4px 6px; font-weight: bold;">MI</td>
+          <td style="border: 1px solid #000; padding: 4px 6px;" id="pMI"></td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #000; padding: 4px 6px; font-weight: bold;">Address</td>
+          <td style="border: 1px solid #000; padding: 4px 6px;" id="pAddress"></td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #000; padding: 4px 6px; font-weight: bold;">Contact No.</td>
+          <td style="border: 1px solid #000; padding: 4px 6px;" id="pContact"></td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #000; padding: 4px 6px; font-weight: bold;">Account No.</td>
+          <td style="border: 1px solid #000; padding: 4px 6px; font-weight: bold;" id="pAccount"></td>
+        </tr>
+      </table>
+
+      <!-- 2x2 Photo Box with Customer No on top -->
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <div style="font-size: 8.5pt; margin-bottom: 4px; width: 100%; text-align: center; border: 1px solid #000; padding: 2px;">
+          <strong>Customer No:</strong> <span id="pRefNo" style="font-weight: bold;"></span>
+        </div>
+        <div style="width: 120px; height: 120px; border: 1px solid #000; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff;" id="pPhotoBox">
+          <span style="font-size: 8pt; color: #666;">2x2 Photo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Documentary Requirements Submitted -->
+    <div style="margin-top: 14px; font-size: 8.5pt;">
+      <div style="font-weight: bold; margin-bottom: 4px;">DOCUMENTARY REQUIREMENTS SUBMITTED:</div>
+      <div style="border: 1px solid #000; padding: 6px 10px; display: flex; flex-direction: column; gap: 3px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+          <div id="pReqApp">□ Application Form</div>
+          <div id="pReqOwn">□ Proof of Ownership</div>
+          <div id="pReqTax">□ Real Estate Tax/Tax-Dec</div>
+          <div id="pReqId">□ Photocopy ID with three specimen signatures</div>
+        </div>
+
+        <!-- ID Choices -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; padding-left: 15px; margin-top: 3px; font-size: 8pt;">
+          <div id="pIdPassport">□ Passport</div>
+          <div id="pIdBarangay">□ Barangay ID</div>
+          <div id="pIdPostal">□ Postal ID</div>
+          <div id="pIdLicense">□ Driver's License</div>
+          <div id="pIdSss">□ SSS/GSIS ID</div>
+          <div id="pIdSenior">□ Senior Citizen ID</div>
+        </div>
+
+        <div style="border-top: 1px dashed #999; margin: 4px 0;"></div>
+        <div id="pAuthLetter">□ Authorization letter (if applying through representative)</div>
+        <div id="pDeptId">□ Department Issued ID (if the Representative)</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 10px; font-size: 8.5pt;">
+      <div style="border: 1px solid #000; padding: 6px 12px; display: flex; align-items: center; gap: 35px; background: #fafafa;">
+        <span style="font-weight: bold;">APPLICATION TYPE:</span>
+        <div id="pTypeNew" style="font-weight: bold;">□ New</div>
+        <div id="pTypeRenewal" style="font-weight: bold;">□ Renewal</div>
+      </div>
+    </div>
+
+    <!-- Conditions for Availment -->
+    <div style="margin-top: 10px; font-size: 8.5pt; line-height: 1.35;">
+      <div style="font-weight: bold; margin-bottom: 2px;">CONDITIONS FOR THE AVAILMENT:</div>
+      <ol style="margin-left: 18px; margin-top: 2px; padding-left: 0;">
+        <li>The senior citizen must be a resident of the household.</li>
+        <li>Consumption should not exceed 30 cubic meters</li>
+        <li>This is granted by household regardless of the number of senior citizens living therein.</li>
+        <li>Meter registration should be in the name of the senior citizen for a period of one year.</li>
+        <li>There shall be annual renewal of the application.</li>
+        <li>Water service connection must be residential</li>
+        <li>A senior citizen ID must be presented upon payment.</li>
+        <li>A senior citizen can only avail of one connection discounts.</li>
+      </ol>
+      <p style="margin-top: 6px; font-style: italic;">It is understood that I am fully aware of the conditions for availment and that I agree to abide by all its terms.</p>
+    </div>
+
+    <!-- Date of Filing & Signature -->
+    <div style="margin-top: 14px; font-size: 9pt;">
+      <div>
+        IN WITNESS WHEREOF I affix my signature this <strong id="pDateDay">____</strong> day of <strong id="pDateMonth">December</strong> Year <strong id="pDateYear">2026</strong> at Siniloan, Laguna.
+      </div>
+      <div style="margin-top: 50px; text-align: right;">
+        <div style="display: inline-block; width: 260px; text-align: center;">
+          <div style="border-bottom: 1px solid #000; height: 25px;"></div>
+          <div style="margin-top: 4px; font-size: 8.5pt; font-weight: bold;">Signature over Printed Name of Applicant</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signatories Footer -->
+    <div style="margin-top: 25px; display: grid; grid-template-columns: 1fr 1fr; font-size: 9pt;">
+      <div>
+        <div style="font-size: 8.5pt;">RECOMMENDING APPROVAL:</div>
+        <div style="margin-top: 35px; font-weight: bold; font-size: 9.5pt;">SUSAN G. VELASCO</div>
+        <div style="font-size: 8pt; color: #222;">Division Manager, Commercial Services</div>
+      </div>
+      
+      <div style="text-align: right; padding-top: 28px;">
+        <div style="font-size: 8.5pt;">APPROVED BY:</div>
+        <div style="margin-top: 35px; font-weight: bold; font-size: 9.5pt;">ENGR. ISIDORO V. REALEZA</div>
+        <div style="font-size: 8pt; color: #222;">General Manager</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📷 Web Camera Modal -->
+<div id="cameraModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: #ffffff; border-radius: 12px; width: 420px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+    <div style="background: #f8fafc; padding: 10px 16px; border-bottom: 1.5px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center;">
+      <strong style="font-size: 0.9rem; color: #0f172a;"><i class='bx bx-camera'></i> Capture 2x2 Photo</strong>
+      <button type="button" onclick="closeCameraModal()" style="border: none; background: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">&times;</button>
+    </div>
+    
+    <div style="padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+      <!-- Live Video Feed na may transform container para sa Zoom -->
+      <div style="width: 280px; height: 280px; border-radius: 8px; overflow: hidden; background: #000; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; position: relative;">
+        <video id="cameraVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.1s ease-out; transform-origin: center center;"></video>
+      </div>
+
+      <!-- 🔍 ZOOM SLIDER CONTROL (1x - 3x) -->
+      <div style="width: 280px; display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px;">
+        <i class='bx bx-zoom-in' style="font-size: 1.1rem; color: #0284c7;"></i>
+        <span style="font-size: 0.75rem; font-weight: 700; color: #334155; min-width: 45px;">Zoom:</span>
+        <input type="range" id="cameraZoomRange" min="1" max="3" step="0.1" value="1" oninput="updateCameraZoom(this.value)" style="flex: 1; cursor: pointer; accent-color: #0284c7;">
+        <span id="zoomLevelText" style="font-size: 0.75rem; font-weight: 800; color: #0284c7; min-width: 32px; text-align: right;">1.0x</span>
+      </div>
+      
+      <!-- Hidden canvas para sa frame extraction -->
+      <canvas id="cameraCanvas" width="400" height="400" style="display: none;"></canvas>
+
+      <div style="display: flex; gap: 10px; width: 100%; justify-content: center; margin-top: 4px;">
+        <button type="button" class="btn-std" onclick="closeCameraModal()">Cancel</button>
+        <button type="button" class="btn-std btn-save" onclick="takeSnapshot()">
+          <i class='bx bx-camera'></i> Snap Photo
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script src="/commercial/senior-citizen.js"></script>
+</body>
+</html>

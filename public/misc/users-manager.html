@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User & Staff Accounts Management - SIWADI PACD</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-soft: #f0f9ff;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --purple: #7c3aed;
+      --bg-main: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-sec: #64748b;
+      --border-color: #cbd5e1;
+      --card-border: #e2e8f0;
+    }
+
+    html.dark {
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --primary-soft: #1e293b;
+      --bg-main: #0b1120;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-sec: #94a3b8;
+      --border-color: #334155;
+      --card-border: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Module Header Toolbar */
+    .module-header {
+      background: var(--card-bg);
+      border-bottom: 1.5px solid var(--border-color);
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .header-title-badge {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    /* Workspace Layout */
+    .workspace {
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      gap: 0.85rem;
+      padding: 0.85rem 1.25rem;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .panel-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+
+    .panel-title {
+      background: var(--bg-main);
+      padding: 0.6rem 0.95rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      border-bottom: 1.5px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .form-body {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-sec);
+      text-transform: uppercase;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 0.45rem 0.7rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      outline: none;
+      text-transform: uppercase;
+      background: var(--card-bg);
+      color: var(--text-main);
+    }
+    .form-group input[type="password"], .form-group input.password-input { text-transform: none; }
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--primary);
+    }
+    
+    .password-wrapper { position: relative; display: flex; align-items: center; }
+    .password-wrapper input { padding-right: 36px; }
+    .password-toggle {
+      position: absolute;
+      right: 10px;
+      cursor: pointer;
+      color: var(--text-sec);
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .form-actions { display: flex; gap: 8px; margin-top: 6px; }
+
+    .btn {
+      padding: 0.45rem 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border: 1.5px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: var(--card-bg); color: var(--text-main); border: 1.5px solid var(--border-color); }
+    .btn-secondary:hover { background: var(--bg-main); }
+    .btn-danger { background: #fee2e2; color: var(--danger); border-color: #fecaca; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-warning { background: #fef3c7; color: #92400e; border-color: #fde047; }
+    .btn-warning:hover { background: #fde047; }
+    .btn-purple { background: #f3e8ff; color: var(--purple); border-color: #e9d5ff; }
+    .btn-purple:hover { background: #e9d5ff; }
+
+    /* Table Toolbar & Content */
+    .table-toolbar {
+      padding: 0.55rem 0.95rem;
+      background: var(--bg-main);
+      border-bottom: 1.5px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      flex: 1;
+      max-width: 320px;
+    }
+    .search-box input {
+      border: none;
+      outline: none;
+      width: 100%;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: transparent;
+      color: var(--text-main);
+    }
+
+    .table-container { flex: 1; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: nowrap; }
+    th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-main);
+      color: var(--text-sec);
+      font-weight: 800;
+      text-align: left;
+      padding: 0.6rem 0.85rem;
+      border-bottom: 2px solid var(--border-color);
+      border-right: 1px solid var(--card-border);
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      letter-spacing: 0.03em;
+      z-index: 5;
+    }
+    td {
+      padding: 0.6rem 0.85rem;
+      border-bottom: 1px solid var(--card-border);
+      border-right: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+    tr:hover td { background-color: var(--primary-soft); }
+
+    .badge { padding: 2px 7px; border-radius: 4px; font-size: 0.68rem; font-weight: 800; }
+    .badge-admin { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+    .badge-comm { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+    .badge-eng { background: #fef3c7; color: #92400e; border: 1px solid #fde047; }
+    .badge-active { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-inactive { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 5000;
+    }
+    .modal-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      width: 450px;
+      max-width: 90%;
+      border: 1.5px solid var(--border-color);
+      box-shadow: 0 16px 36px rgba(0,0,0,0.3);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      background: var(--bg-main);
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 18px;
+      font-weight: 800;
+      color: var(--primary);
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-body {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .modal-footer {
+      padding: 10px 18px;
+      background: var(--bg-main);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+  </style>
+
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('pacd_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <header class="module-header">
+    <div class="header-title-badge">
+      <i class='bx bxs-user-account'></i> USER & STAFF ACCOUNTS MANAGEMENT
+    </div>
+    <div>
+      <button type="button" class="btn btn-secondary" onclick="loadUsers()">
+        <i class='bx bx-refresh'></i> Refresh
+      </button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    
+    <!-- ➕ ENTRY FORM: Magdagdag ng Bagong User -->
+    <section class="panel-card">
+      <div class="panel-title">
+        <span><i class='bx bx-user-plus'></i> Add New Account</span>
+      </div>
+      <form class="form-body" id="addUserForm" onsubmit="event.preventDefault(); handleAddUser();">
+        <div class="form-group">
+          <label>Username / Login ID:</label>
+          <input type="text" id="username" placeholder="e.g. JUAN" required>
+        </div>
+
+        <div class="form-group">
+          <label>Full Name / Designation:</label>
+          <input type="text" id="fullName" placeholder="e.g. JUAN DELA CRUZ" required>
+        </div>
+
+        <div class="form-group">
+          <label>Initial Password:</label>
+          <div class="password-wrapper">
+            <input type="password" id="password" class="password-input" placeholder="Enter password" required>
+            <i class='bx bx-show password-toggle' onclick="togglePasswordVisibility('password', this)"></i>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Division:</label>
+          <select id="division">
+            <option value="COMMERCIAL">COMMERCIAL</option>
+            <option value="ENGINEERING">ENGINEERING</option>
+            <option value="ADMIN">ADMIN / GENERAL SERVICES</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Access Role:</label>
+          <select id="role">
+            <option value="STAFF">STAFF (Operational)</option>
+            <option value="ADMIN">ADMIN (Supervisory / Master)</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" style="flex: 1;"><i class='bx bx-save'></i> Create Account</button>
+          <button type="reset" class="btn btn-secondary">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 📋 DATA TABLE: Listahan ng Lahat ng User -->
+    <section class="panel-card">
+      <div class="table-toolbar">
+        <div class="search-box">
+          <i class='bx bx-search' style="color: var(--text-sec);"></i>
+          <input type="text" id="searchInput" placeholder="Search user, name, division..." oninput="filterUsers(this.value)">
+        </div>
+        <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-sec);">
+          Total: <span id="userCount" style="color: var(--primary); font-weight: 800;">0</span> Accounts
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Full Name / Initial</th>
+              <th>Password (Current)</th>
+              <th>Division</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th style="text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="8" style="text-align: center; color: var(--text-sec); padding: 20px;">Loading users...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- ✏️ MODAL 1: EDIT USER DETAILS -->
+  <div id="editUserModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>✏️ Edit User Details</span>
+        <button type="button" onclick="closeModal('editUserModal')" style="border: none; background: transparent; font-size: 1.3rem; cursor: pointer; color: var(--text-sec);">&times;</button>
+      </div>
+      <form id="editForm" onsubmit="event.preventDefault(); submitEditUser();">
+        <div class="modal-body">
+          <input type="hidden" id="editUserId">
+          
+          <div class="form-group">
+            <label>Username:</label>
+            <input type="text" id="editUsername" required>
+          </div>
+
+          <div class="form-group">
+            <label>Full Name / Initial:</label>
+            <input type="text" id="editFullName" required>
+          </div>
+
+          <div class="form-group">
+            <label>Division:</label>
+            <select id="editDivision">
+              <option value="COMMERCIAL">COMMERCIAL</option>
+              <option value="ENGINEERING">ENGINEERING</option>
+              <option value="ADMIN">ADMIN / GENERAL SERVICES</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Role:</label>
+            <select id="editRole">
+              <option value="STAFF">STAFF</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Status:</label>
+            <select id="editStatus">
+              <option value="1">ACTIVE</option>
+              <option value="0">INACTIVE / DISABLED</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('editUserModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class='bx bx-save'></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 🔑 MODAL 2: CHANGE PASSWORD -->
+  <div id="passwordModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>🔑 Change Password</span>
+        <button type="button" onclick="closeModal('passwordModal')" style="border: none; background: transparent; font-size: 1.3rem; cursor: pointer; color: var(--text-sec);">&times;</button>
+      </div>
+      <form id="changePasswordForm" onsubmit="event.preventDefault(); submitChangePassword();">
+        <div class="modal-body">
+          <input type="hidden" id="pwdUserId">
+          
+          <div style="background: var(--primary-soft); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.82rem;">
+            <div><strong style="color: var(--text-sec);">User:</strong> <span id="pwdTargetUser" style="font-weight: 800; color: var(--primary);"></span></div>
+          </div>
+
+          <div class="form-group">
+            <label>Current / Existing Password:</label>
+            <div class="password-wrapper">
+              <input type="text" id="pwdCurrentPassword" readonly style="background: var(--bg-main); font-weight: 800; color: var(--danger);">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>New Password:</label>
+            <div class="password-wrapper">
+              <input type="password" id="pwdNewPassword" class="password-input" placeholder="Type new password here..." required>
+              <i class='bx bx-show password-toggle' onclick="togglePasswordVisibility('pwdNewPassword', this)"></i>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('passwordModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class='bx bx-check'></i> Update Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let usersList = [];
+
+    document.addEventListener('DOMContentLoaded', loadUsers);
+
+    async function loadUsers() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-sec); padding: 14px;"><i class='bx bx-loader-alt bx-spin'></i> Loading users...</td></tr>`;
+
+      try {
+        const res = await fetch('/api/misc/users/all');
+        const json = await res.json();
+
+        if (json.success) {
+          usersList = json.data || [];
+          document.getElementById('userCount').textContent = usersList.length;
+          renderTable(usersList);
+        } else {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--danger);">Error: ${json.message}</td></tr>`;
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--danger);">Failed to load users: ${err.message}</td></tr>`;
+      }
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-sec); padding: 14px;">Walang nahanap na user record.</td></tr>`;
+        return;
+      }
+
+      data.forEach(u => {
+        let divBadge = 'badge-comm';
+        if (u.DIVISION === 'ADMIN') divBadge = 'badge-admin';
+        if (u.DIVISION === 'ENGINEERING') divBadge = 'badge-eng';
+
+        const isSuperAdmin = (u.USERNAME === 'POWELL' || u.USERNAME === 'ADMIN');
+        const isActive = (u.IS_ACTIVE === 1 || u.IS_ACTIVE === true);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight: 700; color: var(--text-sec);">${u.ID}</td>
+          <td style="font-weight: 800; color: var(--primary);">${u.USERNAME}</td>
+          <td style="font-weight: 600;">${u.FULL_NAME}</td>
+          <td>
+            <span style="font-family: monospace; font-weight: 700; background: var(--bg-main); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color);">
+              ${u.PASSWORD || '***'}
+            </span>
+          </td>
+          <td><span class="badge ${divBadge}">${u.DIVISION}</span></td>
+          <td><strong style="font-size: 0.76rem;">${u.ROLE}</strong></td>
+          <td>
+            <span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}">
+              ${isActive ? 'ACTIVE' : 'INACTIVE'}
+            </span>
+          </td>
+          <td style="text-align: center;">
+            <div style="display: flex; gap: 4px; justify-content: center;">
+              <button type="button" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem;" title="Edit Info" onclick="openEditModal(${u.ID})">
+                <i class='bx bx-edit'></i> Edit
+              </button>
+              <button type="button" class="btn btn-purple" style="padding: 3px 8px; font-size: 0.72rem;" title="Change Password" onclick="openPasswordModal(${u.ID})">
+                <i class='bx bx-key'></i> Pass
+              </button>
+              ${isSuperAdmin ? '' : `
+                <button type="button" class="btn btn-danger" style="padding: 3px 8px; font-size: 0.72rem;" title="Delete User" onclick="handleDeleteUser(${u.ID}, '${u.USERNAME}')">
+                  <i class='bx bx-trash'></i>
+                </button>
+              `}
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterUsers(query) {
+      const q = query.trim().toUpperCase();
+      if (!q) return renderTable(usersList);
+
+      const filtered = usersList.filter(u => 
+        (u.USERNAME && u.USERNAME.toUpperCase().includes(q)) ||
+        (u.FULL_NAME && u.FULL_NAME.toUpperCase().includes(q)) ||
+        (u.DIVISION && u.DIVISION.toUpperCase().includes(q)) ||
+        (u.ROLE && u.ROLE.toUpperCase().includes(q))
+      );
+      renderTable(filtered);
+    }
+
+    // ➕ Add User Action
+    async function handleAddUser() {
+      const payload = {
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value.trim(),
+        fullName: document.getElementById('fullName').value.trim(),
+        division: document.getElementById('division').value,
+        role: document.getElementById('role').value
+      };
+
+      try {
+        const res = await fetch('/api/misc/users/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert('✅ ' + json.message);
+          document.getElementById('addUserForm').reset();
+          loadUsers();
+        } else {
+          alert('❌ Error: ' + json.message);
+        }
+      } catch (e) {
+        alert('❌ Error: ' + e.message);
+      }
+    }
+
+    // ✏️ Edit User Modal
+    function openEditModal(id) {
+      const u = usersList.find(item => item.ID === id);
+      if (!u) return;
+
+      document.getElementById('editUserId').value = u.ID;
+      document.getElementById('editUsername').value = u.USERNAME;
+      document.getElementById('editFullName').value = u.FULL_NAME;
+      document.getElementById('editDivision').value = u.DIVISION;
+      document.getElementById('editRole').value = u.ROLE;
+      document.getElementById('editStatus').value = (u.IS_ACTIVE === 1 || u.IS_ACTIVE === true) ? '1' : '0';
+
+      document.getElementById('editUserModal').style.display = 'flex';
+    }
+
+    async function submitEditUser() {
+      const payload = {
+        id: document.getElementById('editUserId').value,
+        username: document.getElementById('editUsername').value.trim(),
+        fullName: document.getElementById('editFullName').value.trim(),
+        division: document.getElementById('editDivision').value,
+        role: document.getElementById('editRole').value,
+        isActive: document.getElementById('editStatus').value === '1'
+      };
+
+      try {
+        const res = await fetch('/api/misc/users/update', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert('✅ ' + json.message);
+          closeModal('editUserModal');
+          loadUsers();
+        } else {
+          alert('❌ Error: ' + json.message);
+        }
+      } catch (e) {
+        alert('❌ Error: ' + e.message);
+      }
+    }
+
+    // 🔑 Password Modal
+    function openPasswordModal(id) {
+      const u = usersList.find(item => item.ID === id);
+      if (!u) return;
+
+      document.getElementById('pwdUserId').value = u.ID;
+      document.getElementById('pwdTargetUser').textContent = `${u.FULL_NAME} (@${u.USERNAME})`;
+      document.getElementById('pwdCurrentPassword').value = u.PASSWORD || '(Walang Nakatala)';
+      document.getElementById('pwdNewPassword').value = '';
+
+      document.getElementById('passwordModal').style.display = 'flex';
+    }
+
+    async function submitChangePassword() {
+      const payload = {
+        id: document.getElementById('pwdUserId').value,
+        newPassword: document.getElementById('pwdNewPassword').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/misc/users/change-password', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert('🎉 ' + json.message);
+          closeModal('passwordModal');
+          loadUsers();
+        } else {
+          alert('❌ Error: ' + json.message);
+        }
+      } catch (e) {
+        alert('❌ Error: ' + e.message);
+      }
+    }
+
+    // 🗑️ Delete User
+    async function handleDeleteUser(id, username) {
+      if (!confirm(`CRITICAL: Sigurado ka bang nais mong tanggalin ang account ni "${username}"?`)) return;
+
+      try {
+        const res = await fetch(`/api/misc/users/delete/${id}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) {
+          alert('Record deleted.');
+          loadUsers();
+        } else {
+          alert('❌ Error: ' + json.message);
+        }
+      } catch (e) {
+        alert('❌ Error: ' + e.message);
+      }
+    }
+
+    // Password visibility toggle
+    function togglePasswordVisibility(inputId, iconEl) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        iconEl.classList.replace('bx-show', 'bx-hide');
+      } else {
+        input.type = 'password';
+        iconEl.classList.replace('bx-hide', 'bx-show');
+      }
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+  </script>
+</body>
+</html>

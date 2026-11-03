@@ -1,0 +1,129 @@
+{
+  "zone_1": {
+    "due_date": {
+      "month": "September 2026",
+      "day": "16"
+    },
+    "reading_date": {
+      "month": "September 2026",
+      "day": "1"
+    },
+    "discon_date": {
+      "month": "September 2026",
+      "day": "17"
+    }
+  },
+  "zone_2": {
+    "due_date": {
+      "month": "September 2026",
+      "day": "17"
+    },
+    "reading_date": {
+      "month": "September 2026",
+      "day": "2"
+    },
+    "discon_date": {
+      "month": "September 2026",
+      "day": "21"
+    }
+  },
+  "zone_3": {
+    "due_date": {
+      "month": "September 2026",
+      "day": "21"
+    },
+    "reading_date": {
+      "month": "September 2026",
+      "day": "3"
+    },
+    "discon_date": {
+      "month": "September 2026",
+      "day": "22"
+    }
+  },
+  "zone_4": {
+    "due_date": {
+      "month": "September 2026",
+      "day": "21"
+    },
+    "reading_date": {
+      "month": "September 2026",
+      "day": "4"
+    },
+    "discon_date": {
+      "month": "September 2026",
+      "day": "22"
+    }
+  },
+  "zone_5": {
+    "due_date": {
+      "month": "September 2026",
+      "day": "22"
+    },
+    "reading_date": {
+      "month": "September 2026",
+      "day": "7"
+    },
+    "discon_date": {
+      "month": "September 2026",
+      "day": "23"
+    }
+  },
+  "zone_6": {
+    "due_date": {
+      "month": "September 2026",
+      "day": "23"
+    },
+    "reading_date": {
+      "month": "September 2026",
+      "day": "8"
+    },
+    "discon_date": {
+      "month": "September 2026",
+      "day": "24"
+    }
+  },
+  "zone_7": {
+    "due_date": {
+      "month": "September 2026",
+      "day": "24"
+    },
+    "reading_date": {
+      "month": "September 2026",
+      "day": "9"
+    },
+    "discon_date": {
+      "month": "September 2026",
+      "day": "28"
+    }
+  },
+  "zone_8": {
+    "due_date": {
+      "month": "September 2026",
+      "day": "28"
+    },
+    "reading_date": {
+      "month": "September 2026",
+      "day": "10"
+    },
+    "discon_date": {
+      "month": "September 2026",
+      "day": "29"
+    }
+  },
+  "zone_9": {
+    "due_date": {
+      "month": "September 2026",
+      "day": "23"
+    },
+    "reading_date": {
+      "month": "September 2026",
+      "day": "8"
+    },
+    "discon_date": {
+      "month": "September 2026",
+      "day": "24"
+    }
+  },
+  "last_saved": "2026-09-17T11:53:16.779Z"
+}

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Disconnection Module - Commercial Division</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-soft: #f0f9ff;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --bg-main: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-sec: #64748b;
+      --border-color: #cbd5e1;
+      --card-border: #e2e8f0;
+    }
+
+    html.dark {
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --primary-soft: #1e293b;
+      --bg-main: #0b1120;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-sec: #94a3b8;
+      --border-color: #334155;
+      --card-border: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Module Header Toolbar */
+    .module-header {
+      background: var(--card-bg);
+      border-bottom: 1.5px solid var(--border-color);
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+
+    .header-left-actions { display: flex; align-items: center; gap: 10px; }
+    
+    .header-title-badge {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #dc2626;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .header-right-tools { display: flex; align-items: center; gap: 10px; }
+    .header-right-tools select, .header-right-tools input {
+      padding: 0.4rem 0.75rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-main);
+      background: var(--card-bg);
+      outline: none;
+    }
+    .header-right-tools select:focus, .header-right-tools input:focus {
+      border-color: var(--primary);
+    }
+    
+    /* Workspace */
+    .workspace {
+      display: grid;
+      grid-template-columns: 410px 1fr;
+      gap: 0.85rem;
+      padding: 0.85rem 1.25rem;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .panel-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+
+    .panel-title {
+      background: var(--bg-main);
+      padding: 0.6rem 0.95rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--danger);
+      border-bottom: 1.5px solid var(--border-color);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    
+    .form-scroll-body {
+      padding: 0.85rem 1rem;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 105px 1fr;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-row label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-sec);
+    }
+    .form-row input, .form-row select, .form-row textarea {
+      width: 100%;
+      padding: 0.42rem 0.7rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      outline: none;
+      background: var(--card-bg);
+      color: var(--text-main);
+    }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+      border-color: var(--primary);
+    }
+    
+    .account-boxes {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      align-items: center;
+      gap: 4px;
+    }
+    .account-boxes input { text-align: center; font-weight: 700; }
+    .account-boxes input[readonly] { background-color: var(--bg-main); color: var(--text-sec); }
+
+    .datetime-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto 1fr;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-sec);
+    }
+    .datetime-row input {
+      padding: 0.38rem 0.5rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      background: var(--card-bg);
+      color: var(--text-main);
+    }
+
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-top: 8px;
+      border-top: 1.5px solid var(--card-border);
+    }
+
+    .btn-std {
+      padding: 0.45rem 0.8rem;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      background: var(--card-bg);
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    .btn-std:hover { background: var(--bg-main); }
+    .btn-submit-main { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .btn-submit-main:hover { background: #b91c1c; }
+
+    /* Pool Table */
+    .table-container { flex: 1; overflow: auto; }
+    table.data-pool-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: nowrap; }
+    table.data-pool-table th {
+      position: sticky; top: 0; background: var(--bg-main); color: var(--text-sec); font-weight: 800;
+      text-align: left; padding: 0.6rem 0.85rem; border-bottom: 2px solid var(--border-color);
+      text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.03em;
+    }
+    table.data-pool-table td {
+      padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--card-border); color: var(--text-main);
+    }
+    table.data-pool-table tr:hover td { background-color: #fef2f2; cursor: pointer; }
+
+    /* Context Menu */
+    .context-menu {
+      position: fixed; z-index: 3000; width: 175px; background: var(--card-bg);
+      border: 1.5px solid var(--border-color); border-radius: 6px; box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      display: none; flex-direction: column; padding: 4px 0;
+    }
+    .context-menu-item {
+      padding: 8px 14px; font-size: 0.78rem; font-weight: 700; color: var(--text-main);
+      display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.1s;
+    }
+    .context-menu-item:hover { background-color: var(--primary-soft); color: var(--primary); }
+    .context-menu-item.danger { color: var(--danger); }
+    .context-menu-item.danger:hover { background-color: #fee2e2; }
+  </style>
+
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('pacd_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+<!-- Context Menu -->
+  <div id="customContextMenu" class="context-menu" style="width: 200px;">
+    <div class="context-menu-item" onclick="triggerSendToReconnection()" style="color: #16a34a;">
+      <i class='bx bx-plug' style="color: #16a34a;"></i> Send to Reconnection
+    </div>
+    <div class="context-menu-item" onclick="triggerEdit()">
+      <i class='bx bx-edit' style="color: var(--primary);"></i> Edit Record
+    </div>
+    <div class="context-menu-item danger" onclick="triggerDelete()">
+      <i class='bx bx-trash'></i> Delete Record
+    </div>
+  </div>
+
+  <!-- Top Toolbar -->
+  <header class="module-header">
+    <div class="header-left-actions">
+      <div class="header-title-badge">
+        <i class='bx bx-power-off'></i> DISCONNECTED ACCOUNTS LIST
+      </div>
+    </div>
+
+    <div class="header-right-tools">
+      <select id="statusFilter" onchange="loadDataPool()">
+        <option value="ALL">ALL</option>
+        <option value="DISCONNECTED">DISCONNECTED</option>
+        <option value="PENDING">PENDING</option>
+      </select>
+      <input type="text" id="searchTableInput" placeholder="Search pool..." oninput="filterDataPool(this.value)">
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- Entry Form -->
+    <section class="panel-card">
+      <div class="panel-title" id="formHeaderTitle">Disconnection Entry Details</div>
+      <div class="form-scroll-body">
+        
+        <div class="form-row">
+          <label>Account #:</label>
+          <div class="account-boxes">
+            <input type="text" id="accPart1" maxlength="4" placeholder="00" onkeydown="if(event.key==='Enter') document.getElementById('accPart3').focus()">
+            <span>-</span>
+            <input type="text" id="accPart2" value="XXX" readonly>
+            <span>-</span>
+            <input type="text" id="accPart3" maxlength="5" placeholder="000" onkeydown="if(event.key==='Enter') onAccountEnter()">
+          </div>
+        </div>
+
+        <div class="form-row"><label>Name:</label><input type="text" id="accountName"></div>
+        <div class="form-row"><label>Address:</label><textarea id="address" rows="2"></textarea></div>
+        <div class="form-row"><label>Meter #:</label><input type="text" id="meterNumber"></div>
+        <div class="form-row"><label>Last Reading:</label><input type="number" id="reading" step="0.01"></div>
+
+        <div class="form-row">
+          <label>Meter Status:</label>
+          <select id="meterStatus">
+            <option value="MAGNETIC" selected>MAGNETIC</option>
+            <option value="KALAS">KALAS</option>
+          </select>
+        </div>
+
+        <div class="datetime-row">
+          <label>Date:</label>
+          <input type="date" id="discDate" onkeydown="if(event.key==='Enter') { event.preventDefault(); document.getElementById('discTime').focus(); }">
+          
+          <label>Time:</label>
+          <input type="time" id="discTime" onkeydown="if(event.key==='Enter') { event.preventDefault(); document.getElementById('remarks').focus(); }">
+        </div>
+
+        <div class="form-row">
+          <label>Remarks:</label>
+          <textarea id="remarks" rows="2" placeholder="Dahilan ng pagputol..." onkeydown="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('plumberRemarks').focus(); }"></textarea>
+        </div>
+
+        <div class="form-row">
+          <label>Plumber Note:</label>
+          <textarea id="plumberRemarks" rows="2" placeholder="Tala ng Plumber..." onkeydown="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); submitDisconnection(); }"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <input type="hidden" id="editingRecordId" value="">
+          <button type="button" class="btn-std btn-submit-main" id="btnSubmitForm" onclick="submitDisconnection()">
+            <i class='bx bx-save'></i> Save Entry
+          </button>
+          <button type="button" class="btn-std" id="btnCancelEdit" onclick="cancelEditMode()" style="display: none; background: #fee2e2; color: var(--danger); border-color:#fecaca;">Cancel Edit</button>
+          <button type="button" class="btn-std" onclick="clearForm()">Clear Form</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Data Pool Table -->
+    <section class="panel-card">
+      <div class="panel-title" style="color: var(--text-sec);">Data Pool</div>
+      <div class="table-container">
+        <table class="data-pool-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Account #</th>
+              <th>Account Name</th>
+              <th>Address</th>
+              <th>Meter #</th>
+              <th>Reading</th>
+              <th>Meter Status</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/commercial/disconnection.js"></script>
+</body>
+</html>

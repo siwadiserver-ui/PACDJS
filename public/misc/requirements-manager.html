@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Requirements Pool Manager - SIWADI PACD</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+  <style>
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif; 
+    }
+    
+    body { 
+      background-color: #f1f5f9; 
+      color: #0f172a; 
+      padding: 1.25rem; 
+      min-height: 100vh; 
+    }
+
+    /* Sub-Header Strip */
+    .module-header {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .header-title-box h2 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .header-title-box p {
+      font-size: 0.72rem;
+      color: #475569;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Action Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn-primary { 
+      background-color: #0284c7; 
+      color: #ffffff !important; 
+    }
+    .btn-primary:hover { 
+      background-color: #0369a1; 
+    }
+    .btn-secondary {
+      background-color: #ffffff;
+      color: #0f172a !important;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-secondary:hover { 
+      background-color: #f8fafc; 
+    }
+    .btn-danger { 
+      background-color: #ef4444; 
+      color: #ffffff !important; 
+    }
+    .btn-danger:hover { 
+      background-color: #dc2626; 
+    }
+
+    /* Solid White Card Panels */
+    .panel {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .panel-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #334155;
+      margin-bottom: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    /* High-Contrast Inputs */
+    .form-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      align-items: center;
+    }
+    .input-field {
+      padding: 0.55rem 0.85rem;
+      border-radius: 6px;
+      border: 1.5px solid #cbd5e1;
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      font-size: 0.8rem;
+      font-weight: 600;
+      outline: none;
+    }
+    .input-field:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+    .input-field[type="text"] {
+      flex: 1;
+      min-width: 280px;
+      text-transform: uppercase;
+    }
+    .input-field::placeholder {
+      color: #94a3b8;
+    }
+
+    /* Crisp Data Table */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+    }
+    table.custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      text-align: left;
+      background-color: #ffffff;
+    }
+    table.custom-table th {
+      background-color: #f8fafc;
+      color: #334155;
+      padding: 0.65rem 0.9rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      border-bottom: 2px solid #cbd5e1;
+      letter-spacing: 0.03em;
+    }
+    table.custom-table td {
+      padding: 0.75rem 0.9rem;
+      border-bottom: 1px solid #e2e8f0;
+      color: #0f172a !important;
+      background-color: #ffffff;
+    }
+    table.custom-table tbody tr:hover td {
+      background-color: #f1f5f9;
+    }
+
+    /* Status Tags */
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      background-color: #dcfce7;
+      color: #166534 !important;
+      border: 1px solid #bbf7d0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sub-Header -->
+  <div class="module-header">
+    <div class="header-left">
+      <button type="button" class="btn btn-secondary" onclick="returnToDashboard()" title="Bumalik sa Main Dashboard">
+        <i class='bx bx-home-alt'></i> Main Menu
+      </button>
+      <div class="header-title-box">
+        <h2><i class='bx bx-list-check' style="color: #0284c7;"></i> Application Requirements Pool Manager</h2>
+        <p>Pamamahala ng mga kinakailangang dokumento para sa mga aplikasyon</p>
+      </div>
+    </div>
+
+    <div>
+      <button type="button" class="btn btn-secondary" onclick="loadRequirements()" title="I-refresh ang talaan">
+        <i class='bx bx-refresh'></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Form Panel -->
+  <div class="panel">
+    <div class="panel-title"><i class='bx bx-plus-circle' style="color: #0284c7;"></i> Magdagdag ng Bagong Dokumento / Requirement</div>
+    <form class="form-inline" onsubmit="event.preventDefault(); addRequirement();">
+      <input type="text" id="reqName" class="input-field" placeholder="HAL. BARANGAY PERMIT, VALID ID, PROOF OF OWNERSHIP" required>
+      <input type="number" id="displayOrder" class="input-field" placeholder="Order (1)" style="width: 110px;">
+      <button type="submit" class="btn btn-primary"><i class='bx bx-plus'></i> Idagdag sa Database</button>
+    </form>
+  </div>
+
+  <!-- Table Panel -->
+  <div class="panel">
+    <div class="panel-title"><i class='bx bx-list-ul' style="color: #0284c7;"></i> Talaan ng mga Requirements sa Database</div>
+    <div class="table-container">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th style="width: 80px;">Order</th>
+            <th>Requirement / Dokumento</th>
+            <th style="width: 130px;">Status</th>
+            <th style="text-align: right; width: 110px;">Aksyon</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="4" style="text-align: center; color: #64748b; padding: 1.5rem;"><i class='bx bx-loader-alt bx-spin'></i> Kinukuha ang tala mula sa database...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', loadRequirements);
+
+    function returnToDashboard() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage('GO_TO_DASHBOARD', '*');
+      } else {
+        window.location.href = '/index.html';
+      }
+    }
+
+    async function loadRequirements() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 1.25rem;"><i class='bx bx-loader-alt bx-spin'></i> Kinukuha ang tala mula sa database...</td></tr>`;
+
+      try {
+        const res = await fetch('/api/requirements/all');
+        const json = await res.json();
+        if (json.success && json.data) {
+          if (json.data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 1.5rem;">Walang nakaimbak na requirements sa database.</td></tr>`;
+            return;
+          }
+          tbody.innerHTML = json.data.map(d => `
+            <tr>
+              <td style="font-family: monospace; font-weight: 800; color: #334155;">${d.DISPLAY_ORDER || 0}</td>
+              <td style="font-weight: 700; color: #0f172a;">${d.REQUIREMENT_NAME}</td>
+              <td><span class="status-badge">ACTIVE</span></td>
+              <td style="text-align: right;">
+                <button class="btn btn-danger" style="padding: 3px 8px; font-size: 0.72rem;" onclick="deleteRequirement(${d.ID}, '${d.REQUIREMENT_NAME}')">
+                  <i class='bx bx-trash'></i> Burahin
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ef4444; padding: 1.25rem;">Error: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function addRequirement() {
+      const name = document.getElementById('reqName').value.trim();
+      const order = document.getElementById('displayOrder').value;
+      if (!name) return;
+
+      try {
+        const res = await fetch('/api/requirements/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requirement_name: name, display_order: order })
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('reqName').value = '';
+          document.getElementById('displayOrder').value = '';
+          loadRequirements();
+        } else {
+          alert('Error: ' + data.message);
+        }
+      } catch (e) {
+        alert('Server Error: ' + e.message);
+      }
+    }
+
+    async function deleteRequirement(id, name) {
+      if (!confirm(`Sigurado ka bang nais mong burahin ang "${name}" sa database?`)) return;
+      try {
+        const res = await fetch(`/api/requirements/delete/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          loadRequirements();
+        } else {
+          alert('Error: ' + data.message);
+        }
+      } catch (e) {
+        alert('Server Error: ' + e.message);
+      }
+    }
+  </script>
+</body>
+</html>

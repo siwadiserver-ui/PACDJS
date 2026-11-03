@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meter Reading & Disconnection Scheduler</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --primary: #0284c7;
+      --reading-color: #0284c7;
+      --reading-bg: #e0f2fe;
+      --discon-color: #dc2626;
+      --discon-bg: #fee2e2;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    body { background: var(--bg-page); color: var(--text-main); padding: 1.25rem; }
+
+    .scheduler-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.25rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .scheduler-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.85rem;
+    }
+    .title-area { display: flex; align-items: center; gap: 0.75rem; }
+    .title-area i { font-size: 2rem; color: var(--primary); }
+    .title-area h2 { font-size: 1.15rem; font-weight: 800; }
+    .title-area p { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+
+    .controls-area { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+    .month-picker-container {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1.5px solid var(--border-color);
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+    .month-picker-container select {
+      padding: 5px 8px; border: none; font-weight: 800; font-size: 0.82rem;
+      color: var(--text-main); outline: none; cursor: pointer; background: transparent;
+    }
+
+    .btn-action {
+      background: var(--primary); color: #fff; border: none; padding: 7px 14px;
+      border-radius: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.15s;
+    }
+    .btn-action:hover { opacity: 0.9; }
+    .btn-view-switch { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-color); }
+    .btn-view-switch.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .legend-bar {
+      display: flex; align-items: center; gap: 1rem; font-size: 0.75rem; font-weight: 700;
+      background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);
+    }
+    .legend-pill { padding: 3px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: 800; }
+    .pill-reading { background: var(--reading-bg); color: var(--reading-color); }
+    .pill-discon { background: var(--discon-bg); color: var(--discon-color); }
+
+    /* MATRIX VIEW STYLING */
+    .matrix-container { overflow-x: auto; max-height: 580px; border: 1px solid var(--border-color); border-radius: 8px; }
+    table.matrix-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    table.matrix-table th, table.matrix-table td {
+      border: 1px solid var(--border-color); text-align: center; padding: 6px; min-width: 38px;
+    }
+    table.matrix-table th { background: #f1f5f9; position: sticky; top: 0; z-index: 10; font-weight: 800; }
+    .sticky-col { position: sticky; left: 0; background: #fff !important; z-index: 15; min-width: 120px !important; text-align: left !important; font-weight: 800; }
+
+    .type-select {
+      width: 100%; border: none; font-weight: 800; font-size: 0.68rem;
+      border-radius: 4px; padding: 2px; text-align: center; cursor: pointer; outline: none;
+    }
+    .select-none { background: #ffffff; color: #94a3b8; }
+    .select-reading { background: var(--reading-bg); color: var(--reading-color); }
+    .select-discon { background: var(--discon-bg); color: var(--discon-color); }
+
+    /* MONTH CALENDAR GRID STYLING */
+    .calendar-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px;
+    }
+    .cal-hdr { text-align: center; font-weight: 800; font-size: 0.78rem; padding: 6px; background: #f1f5f9; border-radius: 6px; }
+    .cal-day-box {
+      background: #fff; border: 1px solid var(--border-color); border-radius: 8px;
+      min-height: 100px; padding: 6px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .cal-day-num { font-weight: 800; font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+    .event-badge {
+      font-size: 0.65rem; font-weight: 800; padding: 3px 6px; border-radius: 4px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scheduler-card">
+    
+    <!-- HEADER -->
+    <div class="scheduler-header">
+      <div class="title-area">
+        <i class='bx bx-calendar-event'></i>
+        <div>
+          <h2>Meter Reading & Disconnection Schedule</h2>
+          <p>Siniloan Water District — Operations & Reading Planner</p>
+        </div>
+      </div>
+
+      <div class="controls-area">
+        <div class="month-picker-container">
+          <button type="button" onclick="changeMonthOffset(-1)" style="border:none; background:none; cursor:pointer; color:var(--primary); font-size:1.1rem;"><i class='bx bx-chevron-left'></i></button>
+          
+          <select id="scheduleMonthSelect" onchange="loadScheduleData()">
+            <option value="01">Enero (January)</option>
+            <option value="02">Pebredo (February)</option>
+            <option value="03">Marso (March)</option>
+            <option value="04">Abril (April)</option>
+            <option value="05">Mayo (May)</option>
+            <option value="06">Hunyo (June)</option>
+            <option value="07">Hulyo (July)</option>
+            <option value="08">Agosto (August)</option>
+            <option value="09">Setyembre (September)</option>
+            <option value="10">Oktubre (October)</option>
+            <option value="11">Nobyembre (November)</option>
+            <option value="12">Disyembre (December)</option>
+          </select>
+
+          <select id="scheduleYearSelect" onchange="loadScheduleData()">
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+            <option value="2028">2028</option>
+          </select>
+
+          <button type="button" onclick="changeMonthOffset(1)" style="border:none; background:none; cursor:pointer; color:var(--primary); font-size:1.1rem;"><i class='bx bx-chevron-right'></i></button>
+        </div>
+
+        <div style="display: flex; gap: 4px;">
+          <button type="button" class="btn-action btn-view-switch active" id="btnMatrixView" onclick="switchView('matrix')"><i class='bx bx-grid-alt'></i> Zone Matrix</button>
+          <button type="button" class="btn-action btn-view-switch" id="btnCalendarView" onclick="switchView('calendar')"><i class='bx bx-calendar'></i> Month View</button>
+        </div>
+
+        <button type="button" class="btn-action" onclick="saveScheduleChanges()"><i class='bx bx-save'></i> Save Schedule</button>
+      </div>
+    </div>
+
+    <!-- LEGEND BAR -->
+    <div class="legend-bar">
+      <span><strong>SCHEDULE TYPES:</strong></span>
+      <span class="legend-pill pill-reading">🟦 METER READING & BILLING</span>
+      <span class="legend-pill pill-discon">🟥 DISCONNECTION SCHEDULE</span>
+      <span>|</span>
+      <span style="color: var(--text-muted);">Pumili sa matrix upang magtakda ng petsa bawat Zone.</span>
+    </div>
+
+    <!-- VIEW 1: ZONE MATRIX TABLE -->
+    <div id="paneMatrixView" class="matrix-container">
+      <table class="matrix-table">
+        <thead>
+          <tr id="matrixHeaderRow">
+            <th class="sticky-col">Zone Name</th>
+          </tr>
+        </thead>
+        <tbody id="matrixTableBody">
+          <!-- Injected via JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- VIEW 2: MONTHLY CALENDAR GRID -->
+    <div id="paneCalendarView" style="display: none;">
+      <div class="calendar-grid">
+        <div class="cal-hdr" style="color:#dc2626;">SUN</div>
+        <div class="cal-hdr">MON</div>
+        <div class="cal-hdr">TUE</div>
+        <div class="cal-hdr">WED</div>
+        <div class="cal-hdr">THU</div>
+        <div class="cal-hdr">FRI</div>
+        <div class="cal-hdr" style="color:#c2410c;">SAT</div>
+      </div>
+      <div class="calendar-grid" id="calendarDaysGrid">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let scheduleData = {};
+    let currentView = 'matrix';
+    const dayNameShort = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+    // Listahan ng mga Zone
+    const zoneList = Array.from({ length: 9 }, (_, i) => `Zone ${i + 1}`);
+
+    let canEditSchedule = false;
+
+    // 🔒 Tagasuri kung ADMIN ang naka-login mula sa currentUser session
+    function checkSchedulePermissions() {
+      const rawUser = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
+      let currentUser = null;
+      try {
+        currentUser = rawUser ? JSON.parse(rawUser) : null;
+      } catch (e) {
+        currentUser = null;
+      }
+
+      const username = currentUser ? String(currentUser.username || currentUser.USERNAME || '').trim().toUpperCase() : '';
+      const role = currentUser ? String(currentUser.role || currentUser.ROLE || '').trim().toUpperCase() : '';
+      const division = currentUser ? String(currentUser.division || currentUser.DIVISION || '').trim().toUpperCase() : '';
+
+      // Tanging ADMIN division, ADMIN role, o ADMIN/POWELL username lang ang may Edit Access
+      canEditSchedule = (
+        username === 'POWELL' ||
+        username === 'ADMIN' ||
+        role === 'ADMIN' ||
+        division === 'ADMIN'
+      );
+
+      // Itago / Ipakita ang Save Button
+      const btnSave = document.getElementById('btnSaveSchedule');
+      if (btnSave) btnSave.style.display = canEditSchedule ? 'inline-flex' : 'none';
+
+      // Maglagay ng Visual Status Badge sa Legend Bar
+      const legendBar = document.querySelector('.legend-bar');
+      if (legendBar && !document.getElementById('accessNoticeBadge')) {
+        const badge = document.createElement('span');
+        badge.id = 'accessNoticeBadge';
+        badge.style.cssText = 'margin-left: auto; font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 4px;';
+        legendBar.appendChild(badge);
+      }
+
+      const noticeBadge = document.getElementById('accessNoticeBadge');
+      if (noticeBadge) {
+        if (canEditSchedule) {
+          noticeBadge.textContent = '✏️ ADMIN EDIT ACCESS';
+          noticeBadge.style.background = '#dcfce7';
+          noticeBadge.style.color = '#15803d';
+        } else {
+          noticeBadge.textContent = '👀 VIEW ONLY MODE';
+          noticeBadge.style.background = '#e0f2fe';
+          noticeBadge.style.color = '#0369a1';
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkSchedulePermissions();
+      const now = new Date();
+      document.getElementById('scheduleMonthSelect').value = String(now.getMonth() + 1).padStart(2, '0');
+      document.getElementById('scheduleYearSelect').value = String(now.getFullYear());
+
+      loadScheduleData();
+    });
+
+    function getMonthYearStr() {
+      const m = document.getElementById('scheduleMonthSelect').value;
+      const y = document.getElementById('scheduleYearSelect').value;
+      return `${y}-${m}`;
+    }
+
+    function changeMonthOffset(offset) {
+      let m = parseInt(document.getElementById('scheduleMonthSelect').value, 10);
+      let y = parseInt(document.getElementById('scheduleYearSelect').value, 10);
+      const dt = new Date(y, m - 1 + offset, 1);
+      
+      document.getElementById('scheduleMonthSelect').value = String(dt.getMonth() + 1).padStart(2, '0');
+      document.getElementById('scheduleYearSelect').value = String(dt.getFullYear());
+      loadScheduleData();
+    }
+
+    async function loadScheduleData() {
+      const monthVal = getMonthYearStr();
+      try {
+        const res = await fetch(`/api/schedule/get-schedule?month_year=${monthVal}`);
+        const result = await res.json();
+        if (result.success) {
+          scheduleData = result.data.schedule_data || {};
+        } else {
+          scheduleData = {};
+        }
+      } catch (e) {
+        console.warn('Fallback local storage:', e);
+        const saved = localStorage.getItem(`siwadi_sched_${monthVal}`);
+        scheduleData = saved ? JSON.parse(saved) : {};
+      }
+
+      renderMatrix();
+      if (currentView === 'calendar') renderCalendarGrid();
+    }
+
+    function switchView(view) {
+      currentView = view;
+      document.getElementById('btnMatrixView').classList.toggle('active', view === 'matrix');
+      document.getElementById('btnCalendarView').classList.toggle('active', view === 'calendar');
+
+      document.getElementById('paneMatrixView').style.display = view === 'matrix' ? 'block' : 'none';
+      document.getElementById('paneCalendarView').style.display = view === 'calendar' ? 'block' : 'none';
+
+      if (view === 'calendar') renderCalendarGrid();
+    }
+
+    function renderMatrix() {
+      const monthVal = getMonthYearStr();
+      const [year, month] = monthVal.split('-').map(Number);
+      const totalDays = new Date(year, month, 0).getDate();
+
+      const headerRow = document.getElementById('matrixHeaderRow');
+      headerRow.innerHTML = `<th class="sticky-col">Zone Name</th>`;
+
+      for (let d = 1; d <= totalDays; d++) {
+        const dt = new Date(year, month - 1, d);
+        const dayName = dayNameShort[dt.getDay()];
+        const isSun = dt.getDay() === 0;
+        headerRow.innerHTML += `
+          <th style="${isSun ? 'color:#dc2626; background:#fee2e2;' : ''}">
+            <div>${d}</div>
+            <div style="font-size:0.55rem; opacity:0.8;">${dayName}</div>
+          </th>
+        `;
+      }
+
+      const tbody = document.getElementById('matrixTableBody');
+      tbody.innerHTML = zoneList.map(zone => {
+        let cells = '';
+        for (let d = 1; d <= totalDays; d++) {
+          const key = `${zone}_${d}`;
+          const val = scheduleData[key] || '';
+
+          let selectClass = 'select-none';
+          if (val === 'READING') selectClass = 'select-reading';
+          else if (val === 'DISCON') selectClass = 'select-discon';
+
+          cells += `
+            <td style="padding: 2px;">
+              <select class="type-select ${selectClass}" 
+                      ${canEditSchedule ? '' : 'disabled style="cursor: not-allowed; opacity: 0.75;"'} 
+                      onchange="updateScheduleCell('${zone}', ${d}, this.value)">
+                <option value="" ${val === '' ? 'selected' : ''}>-</option>
+                <option value="READING" ${val === 'READING' ? 'selected' : ''}>READ</option>
+                <option value="DISCON" ${val === 'DISCON' ? 'selected' : ''}>CUT</option>
+              </select>
+            </td>
+          `;
+        }
+
+        return `
+          <tr>
+            <td class="sticky-col"><strong>${zone}</strong></td>
+            ${cells}
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateScheduleCell(zone, day, value) {
+      const key = `${zone}_${day}`;
+      if (value) {
+        scheduleData[key] = value;
+      } else {
+        delete scheduleData[key];
+      }
+      renderMatrix();
+    }
+
+    function renderCalendarGrid() {
+      const monthVal = getMonthYearStr();
+      const [year, month] = monthVal.split('-').map(Number);
+      
+      const firstDay = new Date(year, month - 1, 1).getDay();
+      const totalDays = new Date(year, month, 0).getDate();
+      const grid = document.getElementById('calendarDaysGrid');
+
+      let html = '';
+
+      for (let i = 0; i < firstDay; i++) {
+        html += `<div class="cal-day-box" style="opacity: 0.3; background: #f8fafc;"></div>`;
+      }
+
+      for (let d = 1; d <= totalDays; d++) {
+        let eventsHtml = '';
+
+        zoneList.forEach(zone => {
+          const key = `${zone}_${d}`;
+          const val = scheduleData[key];
+
+          if (val === 'READING') {
+            eventsHtml += `<div class="event-badge pill-reading"><span>${zone}</span><span>READ</span></div>`;
+          } else if (val === 'DISCON') {
+            eventsHtml += `<div class="event-badge pill-discon"><span>${zone}</span><span>CUT</span></div>`;
+          }
+        });
+
+        html += `
+          <div class="cal-day-box">
+            <div class="cal-day-num">${d}</div>
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              ${eventsHtml || '<span style="font-size:0.6rem; color:#cbd5e1; text-align:center;">No Task</span>'}
+            </div>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = html;
+    }
+
+    async function saveScheduleChanges() {
+      if (!canEditSchedule) {
+        alert('⛔ Restricted: Tanging ang Admin lamang ang may pahintulot na mag-save ng Schedule.');
+        return;
+      }
+
+      const monthVal = getMonthYearStr();
+      localStorage.setItem(`siwadi_sched_${monthVal}`, JSON.stringify(scheduleData));
+
+      const rawUser = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
+      let currentUser = null;
+      try { currentUser = rawUser ? JSON.parse(rawUser) : null; } catch(e){}
+      const username = currentUser ? (currentUser.username || currentUser.USERNAME || 'ADMIN') : 'ADMIN';
+
+      try {
+        const res = await fetch('/api/schedule/save-schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            month_year: monthVal,
+            schedule_data: scheduleData,
+            username: username
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert('✅ Matagumpay na na-save ang Reading & Disconnection Schedule sa Server!');
+        } else {
+          alert(`❌ Error: ${data.message}`);
+        }
+      } catch (e) {
+        alert('💾 Na-save sa Local Storage!');
+      }
+    }
+  </script>
+</body>
+</html>

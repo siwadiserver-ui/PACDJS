@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pangakong Pagbabayad Agreement - SIWADI PACD</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-soft: #f0f9ff;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --card-bg: #ffffff;
+      --bg-main: #f1f5f9;
+      --text-main: #0f172a;
+      --text-sec: #64748b;
+      --border-color: #cbd5e1;
+      --card-border: #e2e8f0;
+    }
+
+    html.dark {
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --primary-soft: #1e293b;
+      --bg-main: #0b1120;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-sec: #94a3b8;
+      --border-color: #334155;
+      --card-border: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Module Header Toolbar */
+    .module-header {
+      background: var(--card-bg);
+      border-bottom: 1.5px solid var(--border-color);
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .header-title-badge {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #b45309;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 480px 1fr;
+      gap: 0.85rem;
+      padding: 0.85rem 1.25rem;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .panel-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+
+    .panel-title {
+      background: var(--bg-main);
+      padding: 0.6rem 0.95rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #b45309;
+      border-bottom: 1.5px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .form-scroll-body {
+      padding: 0.85rem 1rem;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-row label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-sec);
+    }
+    .form-row input, .form-row select, .form-row textarea {
+      width: 100%;
+      padding: 0.42rem 0.7rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      outline: none;
+      background: var(--card-bg);
+      color: var(--text-main);
+    }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .acc-triple-box { display: grid; grid-template-columns: 1fr 45px 1fr; gap: 4px; align-items: center; }
+    .acc-triple-box input { text-align: center; font-weight: 700; }
+
+    .schedule-box {
+      background: var(--bg-main);
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-family: 'Consolas', monospace;
+      font-size: 0.8rem;
+      color: var(--text-main);
+      min-height: 85px;
+      white-space: pre-line;
+      line-height: 1.45;
+    }
+
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-top: 8px;
+      border-top: 1.5px solid var(--card-border);
+    }
+
+    .btn-std {
+      padding: 0.45rem 0.8rem;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      background: var(--card-bg);
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .btn-std:hover { background: var(--bg-main); }
+    .btn-save { background: #d97706; color: #fff; border-color: #d97706; }
+    .btn-save:hover { background: #b45309; }
+    .btn-docx { background: #16a34a; color: #fff; border-color: #16a34a; }
+    .btn-docx:hover { background: #15803d; }
+    .btn-print { background: #0284c7; color: #fff; border-color: #0284c7; }
+    .btn-print:hover { background: #0369a1; }
+
+    /* Pool Table */
+    .table-container { flex: 1; overflow: auto; }
+    table.data-pool-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: nowrap; }
+    table.data-pool-table th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-main);
+      color: var(--text-sec);
+      font-weight: 800;
+      text-align: left;
+      padding: 0.6rem 0.85rem;
+      border-bottom: 2px solid var(--border-color);
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      letter-spacing: 0.03em;
+      z-index: 5;
+    }
+    table.data-pool-table td {
+      padding: 0.6rem 0.85rem;
+      border-bottom: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+    table.data-pool-table tr:hover td { background-color: var(--primary-soft); cursor: pointer; }
+
+    /* A4 Direct Print Setup */
+    #printArea { display: none; }
+    @media print {
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea {
+        display: block !important;
+        position: absolute; left: 0; top: 0;
+        width: 210mm;
+        min-height: 297mm;
+        padding: 15mm 20mm;
+        background: #fff;
+        color: #000;
+        font-family: Arial, sans-serif;
+      }
+      .no-split {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      @page { size: A4 portrait; margin: 0; }
+    }
+  </style>
+
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('pacd_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <header class="module-header">
+    <div class="header-title-badge">
+      <i class='bx bx-file-blank'></i> PANGAKONG PAGBABAYAD AGREEMENT
+    </div>
+
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button type="button" class="btn-std" onclick="saveSessionToFile()" title="Backup JSON file">
+        <i class='bx bx-download'></i> Save JSON
+      </button>
+      <label class="btn-std" style="cursor: pointer;" title="Open JSON file">
+        <i class='bx bx-upload'></i> Load JSON
+        <input type="file" id="jsonFileInput" accept=".json" onchange="loadSessionFromFile(this)" style="display: none;">
+      </label>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- Entry Panel -->
+    <section class="panel-card">
+      <div class="panel-title">
+        <span>Payment Agreement Details</span>
+      </div>
+      <div class="form-scroll-body">
+        
+        <input type="hidden" id="editingRecordId">
+
+        <div class="form-row">
+          <label>Account No.:</label>
+          <div class="acc-triple-box">
+            <input type="text" id="accPart1" placeholder="PART 1" onblur="onAccountEnter()">
+            <input type="text" id="accPart2" value="XXX" readonly style="background: var(--bg-main); color: var(--text-sec);">
+            <input type="text" id="accPart3" placeholder="PART 3" onblur="onAccountEnter()">
+          </div>
+        </div>
+
+        <!-- 1. Registered Account Name (Ito ang nasa rekord sa ilalim) -->
+        <div class="form-row">
+          <label>Account Name:</label>
+          <input type="text" id="registeredName" placeholder="PANGALAN SA WATER RECORD">
+        </div>
+
+        <!-- 2. Signee / Representative Name (Ito ang sa "Ako, si...") -->
+        <div class="form-row">
+          <label>Signee / Rep.:</label>
+          <input type="text" id="customerName" placeholder="PANGALAN NG LUMAGDA / HUMARAP">
+        </div>
+
+        <div class="form-row"><label>Address:</label><textarea id="customerAddress" rows="2"></textarea></div>
+        
+        <div class="form-row">
+          <label>Total Amount (₱):</label>
+          <input type="number" step="0.01" id="totalAmount" placeholder="0.00" oninput="calculatePayments()">
+        </div>
+
+        <div class="form-row">
+          <label>No. of Months:</label>
+          <select id="monthsCount" onchange="calculatePayments()">
+            <option value="1">1 Month</option>
+            <option value="2">2 Months</option>
+            <option value="3" selected>3 Months</option>
+            <option value="4">4 Months</option>
+            <option value="5">5 Months</option>
+            <option value="6">6 Months</option>
+            <option value="7">7 Months</option>
+            <option value="8">8 Months</option>
+            <option value="9">9 Months</option>
+            <option value="10">10 Months</option>
+            <option value="11">11 Months</option>
+            <option value="12">12 Months</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>Reason / Dahilan:</label>
+          <input type="text" id="reasonText" value="nasirang linya ng tubig.">
+        </div>
+
+        <div class="form-row" style="align-items: flex-start;">
+          <label style="margin-top: 6px;">Schedule Preview:</label>
+          <div class="schedule-box" id="schedulePreview">Payment schedule will appear here...</div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-std btn-save" id="btnSaveRecord" onclick="saveAgreementToList()">
+            <i class='bx bx-plus-circle'></i> Save to List
+          </button>
+          <button type="button" class="btn-std btn-docx" onclick="downloadWordDocument()"><i class='bx bxs-file-doc'></i> Download Word (.docx)</button>
+          <button type="button" class="btn-std btn-print" onclick="printAgreement()"><i class='bx bx-printer'></i> Print Direct (A4)</button>
+          <button type="button" class="btn-std" onclick="clearForm()">Clear</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Table Panel -->
+    <section class="panel-card">
+      <div class="panel-title">
+        <span>Recent Agreements List (<span id="totalCount">0</span> records)</span>
+        <button type="button" class="btn-std" style="padding: 2px 7px; font-size: 0.72rem;" onclick="clearAllAgreements()">Clear List</button>
+      </div>
+      <div class="table-container">
+        <table class="data-pool-table">
+          <thead>
+            <tr>
+              <th>Account #</th>
+              <th>Registered Owner</th>
+              <th>Signee / Rep.</th>
+              <th>Total Amount</th>
+              <th>Term</th>
+              <th>Monthly</th>
+              <th>Date</th>
+              <th style="text-align: center;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="agreementTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- A4 Direct Print Template -->
+  <div id="printArea">
+    <!-- Header -->
+    <div style="text-align: center; position: relative;">
+      <img src="/swdlogo.png" style="position: absolute; left: 10px; top: 0; width: 60px; height: 60px; object-fit: contain;" onerror="this.src='/SWDLOGO.png';">
+      <h2 style="margin: 0; font-size: 15pt; font-weight: bold;">Siniloan Water District</h2>
+      <p style="margin: 2px 0; font-size: 8.5pt;">SINILOAN, LAGUNA, Philippines, 4014 | Telephone: (049) 511-8572 | Fax No: (049) 521-8578</p>
+      
+      <h3 style="margin-top: 80px; margin-bottom: 6px; font-size: 11.5pt; font-weight: bold; letter-spacing: 0.8px;">P A N G A K O   N G   P A G B A B A Y A D</h3>
+    </div>
+
+    <!-- Letter Body -->
+    <div style="font-size: 10pt; line-height: 1.65; text-align: justify; margin-top: 18px;" id="printBodyContent"></div>
+
+    <!-- Lagda ng Concessionaire / Representante -->
+    <div class="no-split" style="margin-top: 35px; text-align: right;">
+      <div style="display: inline-block; width: 260px; text-align: center;">
+        <div style="border-bottom: 1px solid #000; height: 25px;"></div>
+        <div style="margin-top: 5px; font-size: 8.5pt; font-weight: bold;">Lagda ng Concessionaire / Kinatawan</div>
+      </div>
+    </div>
+
+    <!-- Signatories Footer -->
+    <div class="no-split" style="margin-top: 35px; display: grid; grid-template-columns: 1fr 1fr; font-size: 9pt;">
+      <div>
+        <div style="font-size: 8.5pt;">PINATUNAYAN / NIREREKOMENDA:</div>
+        <div style="margin-top: 32px; font-weight: bold; font-size: 9.5pt;">SUSAN G. VELASCO</div>
+        <div style="font-size: 8pt; color: #222;">Division Manager, Commercial Services</div>
+      </div>
+      
+      <div style="text-align: right; padding-top: 60px;">
+        <div style="font-size: 8.5pt;">SINANG-AYUNAN:</div>
+        <div style="margin-top: 32px; font-weight: bold; font-size: 9.5pt;">ENGR. ISIDORO V. REALEZA</div>
+        <div style="font-size: 8pt; color: #222;">General Manager</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/others/compromise-agreement.js"></script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plumbers Pool Manager - System Tools</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-soft: #f0f9ff;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --bg-main: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-sec: #64748b;
+      --border-color: #cbd5e1;
+      --card-border: #e2e8f0;
+    }
+
+    html.dark {
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --primary-soft: #1e293b;
+      --bg-main: #0b1120;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-sec: #94a3b8;
+      --border-color: #334155;
+      --card-border: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Module Header Toolbar */
+    .module-header {
+      background: var(--card-bg);
+      border-bottom: 1.5px solid var(--border-color);
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .header-left-actions { display: flex; align-items: center; gap: 10px; }
+    .header-title-badge {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .header-right-tools {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-right-tools input {
+      padding: 0.4rem 0.75rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-main);
+      background: var(--card-bg);
+      outline: none;
+      width: 250px;
+    }
+    .header-right-tools input:focus {
+      border-color: var(--primary);
+    }
+
+    /* Workspace Layout */
+    .workspace {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 0.85rem;
+      padding: 0.85rem 1.25rem;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .panel-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+
+    .panel-title {
+      background: var(--bg-main);
+      padding: 0.6rem 0.95rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      border-bottom: 1.5px solid var(--border-color);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .form-body {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .form-row { display: flex; flex-direction: column; gap: 4px; }
+    .form-row label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-sec);
+    }
+    .form-row input, .form-row select {
+      width: 100%;
+      padding: 0.45rem 0.7rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      outline: none;
+      background: var(--card-bg);
+      color: var(--text-main);
+    }
+    .form-row input:focus, .form-row select:focus {
+      border-color: var(--primary);
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-top: 6px;
+      cursor: pointer;
+      color: var(--text-main);
+    }
+    .checkbox-row input {
+      cursor: pointer;
+      accent-color: var(--primary);
+      transform: scale(1.1);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 6px;
+      padding-top: 10px;
+      border-top: 1.5px solid var(--card-border);
+      margin-top: 4px;
+    }
+
+    .btn-std {
+      padding: 0.45rem 0.85rem;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      background: var(--card-bg);
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    .btn-std:hover { background: var(--bg-main); }
+    .btn-save { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-save:hover { background: var(--primary-dark); }
+
+    /* Pool Table */
+    .table-container { flex: 1; overflow: auto; }
+    table.data-pool-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: nowrap; }
+    table.data-pool-table th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-main);
+      color: var(--text-sec);
+      font-weight: 800;
+      text-align: left;
+      padding: 0.6rem 0.85rem;
+      border-bottom: 2px solid var(--border-color);
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      letter-spacing: 0.03em;
+      z-index: 5;
+    }
+    table.data-pool-table td {
+      padding: 0.6rem 0.85rem;
+      border-bottom: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+    table.data-pool-table tr:hover td { background-color: var(--primary-soft); cursor: pointer; }
+
+    .badge-cat { padding: 2px 7px; border-radius: 4px; font-size: 0.68rem; font-weight: 800; }
+    .cat-regular { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .cat-jo { background: #fef3c7; color: #92400e; border: 1px solid #fde047; }
+
+    .badge-active { padding: 2px 7px; border-radius: 4px; font-size: 0.68rem; font-weight: 800; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-inactive { padding: 2px 7px; border-radius: 4px; font-size: 0.68rem; font-weight: 800; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+  </style>
+
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('pacd_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- Top Toolbar -->
+  <header class="module-header">
+    <div class="header-left-actions">
+      <div class="header-title-badge">
+        <i class='bx bx-group'></i> PLUMBERS POOL MANAGER
+      </div>
+    </div>
+
+    <div class="header-right-tools">
+      <input type="text" id="searchTableInput" placeholder="Search plumber..." oninput="filterPlumbers(this.value)">
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- Entry / Edit Form -->
+    <section class="panel-card">
+      <div class="panel-title" id="formHeaderTitle">Add New Plumber</div>
+      <div class="form-body">
+        
+        <input type="hidden" id="editingId" value="">
+
+        <div class="form-row">
+          <label>Plumber Name:</label>
+          <input type="text" id="plumberName" placeholder="e.g. JUAN DELA CRUZ">
+        </div>
+
+        <div class="form-row">
+          <label>Employment Category:</label>
+          <select id="plumberCategory">
+            <option value="REGULAR">REGULAR</option>
+            <option value="JO">JOB ORDER (JO)</option>
+          </select>
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" id="plumberActive" checked>
+          <span>Active Status (Available for dispatch)</span>
+        </label>
+
+        <div class="form-actions">
+          <button type="button" class="btn-std btn-save" id="btnSubmit" onclick="savePlumber()">
+            <i class='bx bx-save'></i> Save Plumber
+          </button>
+          <button type="button" class="btn-std" id="btnCancel" onclick="clearForm()" style="display: none; color: var(--danger); border-color: #fecaca; background: #fee2e2;">Cancel</button>
+          <button type="button" class="btn-std" onclick="clearForm()">Clear</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Plumbers List -->
+    <section class="panel-card">
+      <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Plumber Roster</span>
+        <span id="plumberCount" style="font-size: 0.76rem; color: var(--text-sec);">0 Plumbers</span>
+      </div>
+      <div class="table-container">
+        <table class="data-pool-table">
+          <thead>
+            <tr>
+              <th style="width: 60px;">#</th>
+              <th>Plumber Name</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th style="width: 90px; text-align: center;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/misc/plumbers-manager.js"></script>
+</body>
+</html>

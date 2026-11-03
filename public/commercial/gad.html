@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GAD's Corner - Commercial Division</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <!-- SheetJS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif; 
+    }
+    
+    body { 
+      background-color: #f1f5f9; 
+      color: #0f172a; 
+      height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      overflow: hidden; 
+    }
+
+    /* Clean Single Header Strip */
+    .module-header {
+      background-color: #ffffff;
+      border-bottom: 1.5px solid #cbd5e1;
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      flex-shrink: 0;
+    }
+    .header-title-box {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .header-title-box h2 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .header-title-box p {
+      font-size: 0.72rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .search-input {
+      padding: 0.5rem 0.85rem;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #0f172a;
+      outline: none;
+      width: 280px;
+      background-color: #ffffff;
+      transition: border-color 0.15s;
+    }
+    .search-input:focus {
+      border-color: #d946ef;
+      box-shadow: 0 0 0 3px rgba(217, 70, 239, 0.15);
+    }
+    
+    /* Workspace Split */
+    .workspace { 
+      display: grid; 
+      grid-template-columns: 390px 1fr; 
+      gap: 0.85rem; 
+      padding: 0.85rem 1.25rem; 
+      flex: 1; 
+      overflow: hidden; 
+    }
+    .panel-card { 
+      background: #ffffff; 
+      border: 1.5px solid #cbd5e1; 
+      border-radius: 8px; 
+      display: flex; 
+      flex-direction: column; 
+      overflow: hidden; 
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .panel-title { 
+      background: #f8fafc; 
+      padding: 0.65rem 0.95rem; 
+      font-size: 0.82rem; 
+      font-weight: 800; 
+      color: #a21caf; 
+      border-bottom: 1.5px solid #cbd5e1; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    
+    .form-scroll-body { 
+      padding: 1rem; 
+      overflow-y: auto; 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 0.85rem; 
+    }
+    .info-box { 
+      background: #fdf2f8; 
+      border: 1.5px solid #fbcfe8; 
+      padding: 0.75rem 0.9rem; 
+      border-radius: 6px; 
+      font-size: 0.8rem; 
+      color: #0f172a;
+    }
+    .info-box div { margin-bottom: 4px; }
+    .info-box strong { color: #831843; font-weight: 700; }
+
+    .section-title { 
+      font-size: 0.72rem; 
+      font-weight: 800; 
+      color: #475569; 
+      border-bottom: 1.5px solid #e2e8f0; 
+      padding-bottom: 4px; 
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    
+    .checkbox-group { display: flex; flex-direction: column; gap: 7px; padding: 4px 0; }
+    .chk-label { 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      font-size: 0.82rem; 
+      font-weight: 700; 
+      color: #1e293b; 
+      cursor: pointer; 
+    }
+    .chk-label input { 
+      width: 17px; 
+      height: 17px; 
+      cursor: pointer; 
+      accent-color: #d946ef; 
+    }
+
+    /* Form Actions */
+    .form-actions { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 6px; 
+      padding-top: 0.85rem; 
+      border-top: 1.5px solid #e2e8f0; 
+    }
+    .btn-std { 
+      padding: 0.45rem 0.8rem; 
+      font-size: 0.76rem; 
+      font-weight: 700; 
+      border-radius: 6px; 
+      border: 1px solid transparent; 
+      cursor: pointer; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 5px; 
+      transition: all 0.15s ease;
+    }
+    .btn-save { background: #d946ef; color: #ffffff; }
+    .btn-save:hover { background: #c026d3; }
+    .btn-reset-tags { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+    .btn-reset-tags:hover { background: #fde68a; }
+    .btn-clear { background: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
+    .btn-clear:hover { background: #f1f5f9; }
+
+    /* Pool Table */
+    .table-container { flex: 1; overflow: auto; }
+    table.data-pool-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: nowrap; }
+    table.data-pool-table th { 
+      position: sticky; 
+      top: 0; 
+      background: #f8fafc; 
+      color: #334155; 
+      font-weight: 800; 
+      text-align: left; 
+      padding: 0.6rem 0.85rem; 
+      border-bottom: 2px solid #cbd5e1; 
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      letter-spacing: 0.03em;
+    }
+    table.data-pool-table td { 
+      padding: 0.65rem 0.85rem; 
+      border-bottom: 1px solid #e2e8f0; 
+      color: #0f172a; 
+    }
+    table.data-pool-table tr:hover td { 
+      background-color: #fdf4ff; 
+      cursor: pointer; 
+    }
+
+    /* Badges */
+    .badge { 
+      padding: 2px 7px; 
+      border-radius: 4px; 
+      font-size: 0.68rem; 
+      font-weight: 800; 
+      margin-right: 3px; 
+      display: inline-block; 
+    }
+    .bg-senior { background: #fef08a; color: #854d0e; border: 1px solid #fde047; }
+    .bg-solo { background: #fed7aa; color: #9a3412; border: 1px solid #fdba74; }
+    .bg-pwd { background: #e9d5ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+    .bg-indigent { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .bg-gender { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+
+    /* Custom Right-Click Context Menu */
+    .context-menu {
+      position: fixed; 
+      z-index: 3000; 
+      width: 200px; 
+      background: #ffffff; 
+      border: 1.5px solid #cbd5e1; 
+      border-radius: 6px; 
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12); 
+      display: none; 
+      flex-direction: column; 
+      padding: 4px 0;
+    }
+    .context-menu-item { 
+      padding: 8px 14px; 
+      font-size: 0.78rem; 
+      font-weight: 700; 
+      color: #1e293b; 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      cursor: pointer; 
+    }
+    .context-menu-item:hover { background: #fdf4ff; color: #d946ef; }
+  </style>
+</head>
+<body>
+
+  <!-- 📊 GAD SUMMARY REPORT MODAL -->
+  <div id="gadSummaryModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(2px); z-index: 4000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 760px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+      
+      <!-- Modal Header -->
+      <div style="padding: 0.9rem 1.25rem; background: #f8fafc; border-bottom: 1.5px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="font-size: 1rem; font-weight: 800; color: #a21caf; display: flex; align-items: center; gap: 6px;">
+            <i class='bx bx-bar-chart-alt-2'></i> GAD Demographic Breakdown
+          </h3>
+          <p id="sumScopeLabel" style="font-size: 0.72rem; color: #64748b; font-weight: 700; margin-top: 2px;">Saklaw: Lahat ng Zone</p>
+        </div>
+        <button type="button" class="btn-std btn-clear" onclick="closeGadSummaryModal()" style="padding: 4px 8px; font-size: 1.1rem; line-height: 1;">&times;</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div style="padding: 1.25rem; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1.25rem;">
+        
+        <!-- KPI Stats Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem;">
+          <div style="background: #fdf2f8; border: 1.5px solid #fbcfe8; padding: 0.75rem; border-radius: 8px;">
+            <div style="font-size: 0.7rem; font-weight: 800; color: #831843;">KABUUAN</div>
+            <div id="statTotal" style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">0</div>
+          </div>
+          <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; padding: 0.75rem; border-radius: 8px;">
+            <div style="font-size: 0.7rem; font-weight: 800; color: #1e40af;">MALE</div>
+            <div id="statMale" style="font-size: 1.4rem; font-weight: 800; color: #1d4ed8;">0</div>
+          </div>
+          <div style="background: #fdf4ff; border: 1.5px solid #f5d0fe; padding: 0.75rem; border-radius: 8px;">
+            <div style="font-size: 0.7rem; font-weight: 800; color: #86198f;">FEMALE</div>
+            <div id="statFemale" style="font-size: 1.4rem; font-weight: 800; color: #c026d3;">0</div>
+          </div>
+          <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 0.75rem; border-radius: 8px;">
+            <div style="font-size: 0.7rem; font-weight: 800; color: #475569;">OTHERS</div>
+            <div id="statOthers" style="font-size: 1.4rem; font-weight: 800; color: #334155;">0</div>
+          </div>
+        </div>
+
+        <!-- Charts View -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div style="border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0.85rem;">
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 0.5rem;">Kasarian (Sex Distribution)</div>
+            <div style="height: 200px; position: relative;"><canvas id="gadGenderDonutChart"></canvas></div>
+          </div>
+          <div style="border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0.85rem;">
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 0.5rem;">Special Sectors</div>
+            <div style="height: 200px; position: relative;"><canvas id="gadSectorsBarChart"></canvas></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 🧓 1. DITO NAKALAGAY ANG ACTION BANNER PARA SA SENIORS -->
+      <div style="padding: 0.75rem 1.25rem; background: #fefce8; border-top: 1.5px solid #fef08a; display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 0.78rem; font-weight: 700; color: #854d0e;">
+          <i class='bx bxs-user-detail'></i> Nais mo bang makita ang kumpletong talaan ng mga Senior Citizens?
+        </span>
+        <button type="button" class="btn-std" onclick="openAllSeniorsView()" style="background:#ca8a04; color:#fff; border-color:#ca8a04;">
+          <i class='bx bx-list-ul'></i> View All Senior Citizens
+        </button>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="padding: 0.75rem 1.25rem; background: #f8fafc; border-top: 1.5px solid #cbd5e1; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn-std btn-clear" onclick="closeGadSummaryModal()">Isara</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 🧓 2. DITO NAKALAGAY ANG SENIORS MASTERLIST MODAL -->
+  <div id="seniorsListModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(2px); z-index: 5000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 900px; height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+      
+      <!-- Modal Header -->
+      <div style="padding: 0.85rem 1.25rem; background: #fefce8; border-bottom: 1.5px solid #fef08a; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="font-size: 1rem; font-weight: 800; color: #854d0e; display: flex; align-items: center; gap: 6px;">
+            <i class='bx bx-user-check'></i> Masterlist ng mga Senior Citizens
+          </h3>
+          <p id="seniorsScopeLabel" style="font-size: 0.72rem; color: #a16207; font-weight: 700; margin-top: 2px;">Nilo-load...</p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button type="button" class="btn-std" onclick="exportSeniorsToExcel()" style="background:#16a34a; color:#fff; border-color:#16a34a;" title="I-export ang listahan ng Senior Citizens">
+            <i class='bx bx-spreadsheet'></i> Export Seniors Excel
+          </button>
+          <button type="button" class="btn-std btn-clear" onclick="closeAllSeniorsView()" style="padding: 4px 8px; font-size: 1.1rem; line-height: 1;">&times;</button>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div style="flex: 1; overflow: auto; padding: 0;">
+        <table class="data-pool-table" style="width: 100%;">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Account #</th>
+              <th>Account Name</th>
+              <th>Kasarian</th>
+              <th>Iba Pang Sector</th>
+              <th>Address</th>
+            </tr>
+          </thead>
+          <tbody id="seniorsTableBody">
+            <tr><td colspan="6" style="text-align: center; padding: 2rem;">Kinukuha ang talaan...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="padding: 0.65rem 1.25rem; background: #f8fafc; border-top: 1.5px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; font-weight: 700; color: #64748b;">
+        <span id="seniorsCountBadge">0 Senior Citizens</span>
+        <button type="button" class="btn-std btn-clear" onclick="closeAllSeniorsView()">Isara</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Context Menu (Inalis na ang Delete Record) -->
+  <div id="customContextMenu" class="context-menu">
+    <div class="context-menu-item" onclick="triggerEditFromContext()"><i class='bx bx-edit'></i> Tag / Edit GAD</div>
+    <div class="context-menu-item" onclick="triggerResetTagsFromContext()"><i class='bx bx-eraser'></i> Clear GAD Tags</div>
+  </div>
+
+  <header class="module-header">
+    <div class="header-title-box">
+      <h2><i class='bx bx-heart' style="color: #d946ef;"></i> GAD's Corner</h2>
+      <p>Customer Database Profiling & Demographic Tagging</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <!-- 📍 ZONE FILTER DROPDOWN -->
+      <select id="zoneFilterSelect" onchange="onZoneChange(this.value)" class="search-input" style="width: 140px; font-weight: 700; cursor: pointer;">
+        <option value="">Lahat ng Zone</option>
+        <option value="01">Zone 1 (01x)</option>
+        <option value="02">Zone 2 (02x)</option>
+        <option value="03">Zone 3 (03x)</option>
+        <option value="04">Zone 4 (04x)</option>
+        <option value="05">Zone 5 (05x)</option>
+        <option value="06">Zone 6 (06x)</option>
+        <option value="07">Zone 7 (07x)</option>
+        <option value="08">Zone 8 (08x)</option>
+        <option value="09">Zone 9 (09x)</option>
+      </select>
+
+      <!-- 📊 SUMMARY GRAPH & REPORT BUTTON -->
+      <button type="button" class="btn-std" onclick="openGadSummaryModal()" style="background:#7c3aed; color:#fff; border-color:#7c3aed;" title="Tingnan ang GAD Graph at Estadistika">
+        <i class='bx bx-pie-chart-alt-2'></i> GAD Report
+      </button>
+
+      <!-- ⚡ SYNC SENIORS BUTTON -->
+      <button type="button" class="btn-std" onclick="triggerSyncSeniorsToGAD()" style="background:#f59e0b; color:#fff; border-color:#f59e0b;" title="I-sync ang lahat ng rehistradong Senior Citizens sa GAD">
+        <i class='bx bx-sync'></i> Sync Seniors
+      </button>
+
+      <!-- Search Input -->
+      <input type="text" id="searchTableInput" class="search-input" oninput="filterDataPool()" placeholder="Maghanap ng Account #, Pangalan, Address...">
+
+      <!-- Export to Excel -->
+      <button type="button" class="btn-std" onclick="exportGadToExcel()" style="background:#16a34a; color:#fff; border-color:#16a34a;" title="Export view to Excel">
+        <i class='bx bx-spreadsheet'></i> Export to Excel
+      </button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- Profiling Form -->
+    <section class="panel-card">
+      <div class="panel-title">
+        <span id="formPanelTitle"><i class='bx bx-user-pin'></i> Customer GAD Tagging</span>
+        <span id="viewOnlyBadge" style="display: none; font-size: 0.7rem; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px;">VIEW-ONLY</span>
+      </div>
+      <div class="form-scroll-body">
+        
+        <input type="hidden" id="selectedCustomerId">
+
+        <div class="info-box">
+          <div><strong>Account No:</strong> <span id="dispAccountNo">-</span></div>
+          <div><strong>Account Name:</strong> <span id="dispName">Pumili ng konsyumer sa table</span></div>
+          <div><strong>Address:</strong> <span id="dispAddress">-</span></div>
+        </div>
+
+        <!-- SPECIAL SECTORS CHECKBOXES -->
+        <div class="section-title">SPECIAL SECTORS (Piliin lahat ng angkop)</div>
+        <div class="checkbox-group">
+          <label class="chk-label"><input type="checkbox" id="chkSenior"> Senior Citizen</label>
+          <label class="chk-label"><input type="checkbox" id="chkSoloParent"> Solo Parent</label>
+          <label class="chk-label"><input type="checkbox" id="chkPwd"> Person with Disability (PWD)</label>
+          <label class="chk-label"><input type="checkbox" id="chkIndigent"> Indigent</label>
+        </div>
+
+        <!-- SEX / GENDER RADIO GROUP -->
+        <div class="section-title">SEX / GENDER (Pumili ng isa)</div>
+        <div class="checkbox-group">
+          <label class="chk-label"><input type="radio" name="genderRadio" value="MALE"> MALE</label>
+          <label class="chk-label"><input type="radio" name="genderRadio" value="FEMALE"> FEMALE</label>
+          <label class="chk-label"><input type="radio" name="genderRadio" value="LGBTQ+"> LGBTQ+</label>
+          <label class="chk-label"><input type="radio" name="genderRadio" value="PREFER NOT TO SAY"> PREFER NOT TO SAY</label>
+        </div>
+
+        <div class="form-actions" id="formActionsContainer">
+          <button type="button" class="btn-std btn-save" id="btnSaveGAD" onclick="saveGadData()"><i class='bx bx-save'></i> Save GAD Data</button>
+          <button type="button" class="btn-std btn-reset-tags" id="btnResetTags" onclick="resetGadTags()"><i class='bx bx-eraser'></i> Clear Tags</button>
+          <button type="button" class="btn-std btn-clear" onclick="clearForm()">Deselect</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Master Customers Table Panel -->
+    <section class="panel-card">
+      <div class="panel-title" style="color: #475569; font-size: 0.78rem;">
+        Customer Database (Pindutin ang row para mag-tag ng GAD)
+      </div>
+      <div class="table-container">
+        <table class="data-pool-table">
+          <thead>
+            <tr>
+              <th>Account #</th>
+              <th>Account Name</th>
+              <th>Gender</th>
+              <th>Sector Tags</th>
+              <th>Address</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION STRIP -->
+      <div style="padding: 0.5rem 0.85rem; background: #f8fafc; border-top: 1.5px solid #cbd5e1; display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem;">
+        <span id="pageInfoText" style="color: #64748b; font-weight: 700;">Nilo-load...</span>
+        <div style="display: flex; gap: 6px;">
+          <button type="button" class="btn-std btn-clear" id="btnPrevPage" onclick="goToPrevPage()" style="padding: 0.35rem 0.7rem;">
+            <i class='bx bx-chevron-left'></i> Previous
+          </button>
+          <button type="button" class="btn-std btn-clear" id="btnNextPage" onclick="goToNextPage()" style="padding: 0.35rem 0.7rem;">
+            Next <i class='bx bx-chevron-right'></i>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/commercial/gad.js"></script>
+</body>
+</html>

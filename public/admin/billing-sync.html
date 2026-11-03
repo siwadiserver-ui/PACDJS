@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="tubibot.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="theme-color" content="#ec4899">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="SIWADI Sync">
+  <title>SIWADI Bill Inquiry Sync Tool</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    :root {
+      --bg-main: #fdf2f8;
+      --bg-gradient: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%);
+      --card-bg: #ffffff;
+      --card-bg-alt: #fff5f9;
+      --card-border: #fbcfe8;
+      --card-shadow: 0 4px 20px rgba(236, 72, 153, 0.08);
+      --card-shadow-hover: 0 8px 30px rgba(236, 72, 153, 0.15);
+      --primary: #ec4899;
+      --primary-dark: #db2777;
+      --primary-light: #f472b6;
+      --primary-soft: #fce7f3;
+      --text-main: #500724;
+      --text-sub: #9d174d;
+      --text-muted: #be185d;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 22px;
+      --radius-xl: 28px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 24px;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* HEADER */
+    .app-header {
+      max-width: 1400px;
+      margin: 0 auto 24px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 28px;
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--card-shadow);
+    }
+
+    .brand { display: flex; align-items: center; gap: 14px; }
+
+    .brand-text h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      font-size: 0.78rem;
+      color: var(--text-sub);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+    }
+
+    .engine-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      background: var(--primary-soft);
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      border: 1px solid var(--card-border);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+      50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1); }
+    }
+
+    /* BENTO GRID */
+    .bento-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* SIDEBAR */
+    .bento-nav {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--card-shadow);
+      padding: 16px;
+      position: sticky;
+      top: 24px;
+    }
+
+    .nav-header {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 4px;
+    }
+
+    .nav-item:hover {
+      background: var(--primary-soft);
+      color: var(--text-main);
+      transform: translateX(4px);
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+    }
+
+    .nav-icon {
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+    }
+
+    /* MAIN */
+    .bento-main {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .tab-pane { display: none; animation: fadeIn 0.3s ease-out; }
+    .tab-pane.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* CARDS */
+    .bento-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--card-shadow);
+      padding: 24px;
+      transition: all 0.25s ease;
+      margin-bottom: 16px;
+    }
+
+    .bento-card:hover {
+      box-shadow: var(--card-shadow-hover);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-sm);
+      background: var(--primary-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+    }
+
+    .card-desc {
+      font-size: 0.82rem;
+      color: var(--text-sub);
+      margin-top: 3px;
+      line-height: 1.5;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      font-weight: 700;
+      font-size: 0.88rem;
+      padding: 12px 24px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(236, 72, 153, 0.25);
+      font-family: inherit;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(236, 72, 153, 0.35);
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    }
+
+    .btn:active:not(:disabled) { transform: translateY(0); }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: var(--card-bg-alt);
+      color: var(--text-sub);
+      border: 1.5px solid var(--card-border);
+      box-shadow: none;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--primary-soft);
+      color: var(--text-main);
+      border-color: var(--primary-light);
+      box-shadow: none;
+    }
+
+    /* INPUTS */
+    input[type="text"], input[type="email"], input[type="password"], input[type="file"], select {
+      background: var(--card-bg-alt);
+      border: 1.5px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      padding: 12px 16px;
+      font-size: 0.9rem;
+      outline: none;
+      width: 100%;
+      font-family: inherit;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.1);
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    /* DROP ZONE */
+    .drop-zone {
+      border: 2px dashed var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 28px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card-bg-alt);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .drop-zone-content { display: flex; align-items: center; gap: 14px; }
+    .drop-zone-icon { font-size: 1.8rem; }
+
+    /* SUB-TABS */
+    .sub-tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+
+    .sub-btn {
+      background: var(--card-bg-alt);
+      border: 1.5px solid var(--card-border);
+      color: var(--text-sub);
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 8px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .sub-btn:hover { background: var(--primary-soft); color: var(--text-main); }
+
+    .sub-btn.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 10px rgba(236, 72, 153, 0.25);
+    }
+
+    /* ZONE GRID */
+    .zone-grid-pane { display: none; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 10px; }
+    .zone-grid-pane.active { display: grid; }
+
+    .zone-card-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card-bg-alt);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--card-border);
+      transition: all 0.2s ease;
+    }
+
+    .zone-card-item:hover { border-color: var(--primary-light); background: white; }
+
+    .zone-lbl {
+      font-size: 0.82rem;
+      font-weight: 800;
+      width: 58px;
+      color: var(--text-sub);
+      flex-shrink: 0;
+    }
+
+    /* TABLE */
+    .table-viewport {
+      max-height: 480px;
+      overflow-y: auto;
+      background: var(--card-bg-alt);
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--card-border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .table-viewport table { min-width: 640px; }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.86rem; }
+
+    thead th {
+      background: var(--primary-soft);
+      padding: 14px 16px;
+      color: var(--text-sub);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      position: sticky;
+      top: 0;
+      border-bottom: 1.5px solid var(--card-border);
+      z-index: 2;
+    }
+
+    tbody td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    tbody tr:hover { background: var(--primary-soft); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(80, 7, 36, 0.35);
+      backdrop-filter: blur(8px);
+      z-index: 99999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-window {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-xl);
+      padding: 36px 32px;
+      width: 90%;
+      max-width: 480px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(80, 7, 36, 0.3);
+      animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-icon { font-size: 3.5rem; margin-bottom: 14px; line-height: 1; }
+    .modal-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; color: var(--text-main); letter-spacing: -0.02em; }
+    .modal-text { font-size: 0.92rem; color: var(--text-sub); line-height: 1.6; margin-bottom: 26px; word-break: break-word; white-space: pre-line; }
+
+    /* STATS GRID */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .bento-container { grid-template-columns: 1fr; }
+      .bento-nav { position: static; }
+      .nav-list { display: flex; flex-wrap: wrap; gap: 6px; }
+      .nav-item { flex: 1; min-width: 140px; }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      .app-header { padding: 16px 20px; }
+      .bento-card { padding: 20px; }
+      .brand-text h1 { font-size: 1rem; }
+      .engine-status { display: none; }
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: var(--primary-soft); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+    /* MOBILE OPTIMIZATION */
+    @media (max-width: 768px) {
+      .bento-card > div[style*="grid-template-columns"],
+      .bento-card > div > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+      }
+
+      .app-header { flex-direction: column; gap: 12px; padding: 16px 20px; text-align: center; }
+      .engine-status { width: 100%; justify-content: center; }
+      .bento-nav { padding: 12px; }
+
+      .nav-list {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 8px;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+
+      .nav-list::-webkit-scrollbar { display: none; }
+
+      .nav-item {
+        flex-shrink: 0;
+        padding: 12px 18px;
+        min-height: 48px;
+        font-size: 0.85rem;
+        margin-bottom: 0;
+        white-space: nowrap;
+      }
+
+      .btn { padding: 14px 24px; font-size: 0.9rem; min-height: 48px; width: 100%; }
+      .sub-btn { padding: 12px 20px; min-height: 44px; }
+
+      input[type="text"], input[type="email"], input[type="password"], select {
+        padding: 14px 16px;
+        font-size: 1rem;
+        min-height: 48px;
+      }
+
+      .bento-card { padding: 18px 16px; border-radius: var(--radius-md); }
+      .card-header { gap: 12px; }
+      .card-icon { width: 36px; height: 36px; font-size: 1rem; }
+      .card-title { font-size: 0.95rem; }
+      .card-desc { font-size: 0.78rem; }
+
+      .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+      .stats-grid > div { padding: 14px !important; }
+      .stats-grid > div > div:last-child { font-size: 1.4rem !important; }
+
+      thead th { padding: 10px 12px; font-size: 0.7rem; }
+      tbody td { padding: 10px 12px; font-size: 0.82rem; }
+
+      .drop-zone { flex-direction: column; text-align: center; padding: 24px 16px; }
+      .drop-zone-content { flex-direction: column; gap: 8px; }
+
+      .modal-window { padding: 28px 22px; width: 95%; border-radius: var(--radius-lg); }
+      .modal-icon { font-size: 3rem; }
+      .modal-title { font-size: 1.1rem; }
+      .modal-text { font-size: 0.85rem; }
+
+      .card-header[style*="justify-content:space-between"] {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 14px !important;
+      }
+
+      .card-header[style*="justify-content:space-between"] > div:first-child { width: 100%; }
+      .card-header[style*="justify-content:space-between"] > button { width: 100%; }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 10px; }
+      .app-header { padding: 14px 16px; margin-bottom: 16px; }
+      .brand-text h1 { font-size: 0.95rem; }
+      .brand-text p { font-size: 0.7rem; }
+      .bento-container { gap: 14px; }
+      .bento-card { padding: 16px 14px; margin-bottom: 12px; }
+      .stats-grid { grid-template-columns: 1fr !important; }
+      .btn { font-size: 0.85rem; padding: 12px 20px; }
+      .nav-item { padding: 10px 14px; font-size: 0.8rem; }
+      .nav-icon { font-size: 1rem; }
+      .modal-window { padding: 24px 18px; }
+      .modal-icon { font-size: 2.5rem; }
+      .modal-title { font-size: 1rem; }
+      .modal-text { font-size: 0.8rem; margin-bottom: 20px; }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .btn:hover:not(:disabled) { transform: none; }
+      .bento-card:hover { transform: none; box-shadow: var(--card-shadow); }
+      .nav-item:hover { transform: none; }
+      .nav-item, .btn, .sub-btn { -webkit-tap-highlight-color: rgba(236, 72, 153, 0.15); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-text">
+        <h1>Bill Automation App</h1>
+        <p>by Powell Bautista</p>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button id="btnBackupNow" class="btn btn-secondary" style="padding:10px 18px; font-size:0.85rem;">
+        💾 Backup Now
+      </button>
+        <span id="saEmail" style="display:none;"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- BENTO GRID -->
+  <div class="bento-container">
+
+    <!-- SIDEBAR -->
+    <aside class="bento-nav">
+      <div class="nav-header">Modules</div>
+      <ul class="nav-list" style="list-style:none;">
+        <li class="nav-item active" onclick="openTab('uploadExcelTab', this)">
+          <span class="nav-icon">📊</span>
+          <span>Convert Excel</span>
+        </li>
+        <li class="nav-item" onclick="openTab('sendEmailsTab', this)">
+          <span class="nav-icon">✉️</span>
+          <span>Send Bill to Email</span>
+        </li>
+        <li class="nav-item" onclick="openTab('inquiryLogsTab', this)">
+          <span class="nav-icon">📋</span>
+          <span>Inquiry Logs</span>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="bento-main">
+
+      <!-- TAB 1: CONVERT EXCEL -->
+      <section id="uploadExcelTab" class="tab-pane active">
+        <div class="bento-card">
+          <div class="card-header">
+            <div class="card-icon">📁</div>
+            <div>
+              <div class="card-title">Reference Excel File</div>
+              <div class="card-desc">I-drag ang .xlsx file o mag-browse para sa conversion.</div>
+            </div>
+          </div>
+          <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none;" />
+          <div class="drop-zone" id="dropArea">
+            <div class="drop-zone-content">
+              <span class="drop-zone-icon">📂</span>
+              <div>
+                <div style="font-weight:800; font-size:0.9rem;">Piliin ang Reference Excel</div>
+                <div style="color:var(--text-sub); font-size:0.8rem;">I-drag dito o mag-browse</div>
+              </div>
+            </div>
+            <button class="btn btn-secondary" id="btnBrowse" type="button">Browse File</button>
+          </div>
+          <div id="fileName" style="margin-top:12px; font-weight:700; color:var(--primary); font-size:0.85rem;"></div>
+        </div>
+
+        <div class="bento-card">
+          <div class="card-header">
+            <div class="card-icon">📅</div>
+            <div>
+              <div class="card-title">Zone Dates Setup</div>
+              <div class="card-desc">I-set ang due, reading, at discon dates bawat zone.</div>
+            </div>
+          </div>
+          <div class="sub-tabs">
+            <button class="sub-btn active" data-pane="readingDatesGrid">Reading Dates</button>
+            <button class="sub-btn" data-pane="dueDatesGrid">Due Dates</button>
+            <button class="sub-btn" data-pane="disconDatesGrid">Discon Dates</button>
+          </div>
+          <div id="readingDatesGrid" class="zone-grid-pane active"></div>
+          <div id="dueDatesGrid" class="zone-grid-pane"></div>
+          <div id="disconDatesGrid" class="zone-grid-pane"></div>
+        </div>
+
+        <div class="bento-card">
+          <div class="card-header">
+            <div class="card-icon">⚙️</div>
+            <div>
+              <div class="card-title">Auto Column Detection</div>
+              <div class="card-desc">Suriin ang 13 standardized SIWADI columns bago i-export.</div>
+            </div>
+          </div>
+          <div id="mappingContainer" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap:10px; margin-bottom:20px;"></div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+              <button id="btnProcessData" class="btn" disabled>⚡ Process Data</button>
+              <button id="btnExportExcel" class="btn btn-secondary" disabled>💾 Export Excel</button>
+              <button id="btnDirectToSupabase" class="btn" style="background: linear-gradient(135deg, #16a34a, #22c55e);" disabled>⚡ Sync to Supabase</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: SEND EMAILS -->
+      <section id="sendEmailsTab" class="tab-pane">
+        <div class="bento-card">
+          <div class="card-header">
+            <div class="card-icon">📧</div>
+            <div>
+              <div class="card-title">Sender Gmail Credentials</div>
+              <div class="card-desc">Naka-save sa config/sender-config.json</div>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr auto; gap:12px; align-items:end;">
+            <div>
+              <label>Sender Gmail</label>
+              <input type="email" id="senderEmail" placeholder="sender@gmail.com" />
+            </div>
+            <div>
+              <label>App Password</label>
+              <input type="text" id="senderPass" placeholder="16-character password" />
+            </div>
+            <button id="btnSaveSenderConfig" class="btn btn-secondary" type="button">💾 Save</button>
+          </div>
+          <div id="senderConfigMsg" style="font-size:0.85rem; margin-top:12px; font-weight:600;"></div>
+        </div>
+
+        <div class="bento-card">
+          <div class="card-header" style="justify-content:space-between; align-items:center; width:100%;">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div class="card-icon">📨</div>
+              <div>
+                <div class="card-title">Live Dispatch Console</div>
+                <div class="card-desc">Itugma ang records gamit ang Zone Filters.</div>
+              </div>
+            </div>
+            <button id="btnFetchAndMatch" class="btn">🔄 Fetch & Match</button>
+          </div>
+
+          <div id="matchSummaryText" style="font-weight:700; color:var(--primary); margin-bottom:16px;"></div>
+
+          <div id="matchedListContainer" style="display:none;">
+            <div class="table-viewport">
+              <table>
+                  <thead>
+                    <tr>
+                      <th style="width:40px; text-align:center;">✓</th>
+                      <th>Zone</th>
+                      <th>Account No.</th>
+                      <th>Pangalan</th>
+                      <th>Email</th>
+                      <th>Contact No.</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                      <th style="text-align:center;">Actions</th>
+                    </tr>
+                  </thead>
+                <tbody id="matchedTableBody"></tbody>
+              </table>
+            </div>
+
+            <div style="margin-top:20px;">
+              <button id="btnSendAllEmails" class="btn" disabled>📤 Simulan ang Pagpapadala</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: INQUIRY LOGS -->
+      <section id="inquiryLogsTab" class="tab-pane">
+        <div class="bento-card">
+          <div class="card-header" style="justify-content:space-between; align-items:center; width:100%;">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div class="card-icon">📋</div>
+              <div>
+                <div class="card-title">Inquiry Logs</div>
+                <div class="card-desc">Lahat ng inquiries mula sa Supabase — real-time.</div>
+              </div>
+            </div>
+            <button id="btnRefreshInquiries" class="btn">🔄 Refresh</button>
+          </div>
+
+          <div id="inquiryStats" class="stats-grid"></div>
+
+          <div id="inquirySummaryText" style="font-weight:700; color:var(--primary); margin-bottom:12px;"></div>
+
+          <div class="table-viewport" style="max-height:500px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Account No.</th>
+                  <th>Name</th>
+                  <th>Inquiry Time</th>
+                  <th style="text-align:center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="inquiryTableBody">
+                <tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-sub);">Pindutin ang Refresh para i-load ang inquiries.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL -->
+  <div id="globalCenterModal" class="modal-backdrop">
+    <div class="modal-window">
+      <div id="globalModalIcon" class="modal-icon">ℹ️</div>
+      <h2 id="globalModalTitle" class="modal-title">Status Notice</h2>
+      <p id="globalModalMessage" class="modal-text"></p>
+      <button class="btn" onclick="closeCenterModal()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    // TAB NAVIGATION
+    function openTab(tabId, clickedElem) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+      const targetPane = document.getElementById(tabId);
+      if (targetPane) targetPane.classList.add('active');
+      if (clickedElem) clickedElem.classList.add('active');
+
+      if (tabId === 'inquiryLogsTab' && window.InquiryLogsModule) {
+        setTimeout(() => window.InquiryLogsModule.loadInquiries(), 100);
+      }
+    }
+
+    // MODAL FUNCTIONS
+    function showCenterModal(title, message, iconType) {
+      const modal = document.getElementById('globalCenterModal');
+      const titleEl = document.getElementById('globalModalTitle');
+      const msgEl = document.getElementById('globalModalMessage');
+      const iconEl = document.getElementById('globalModalIcon');
+
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+
+      if (iconType === 'success') iconEl.textContent = '🎉';
+      else if (iconType === 'error') iconEl.textContent = '❌';
+      else iconEl.textContent = 'ℹ️';
+
+      modal.style.display = 'flex';
+    }
+
+    function closeCenterModal() {
+      document.getElementById('globalCenterModal').style.display = 'none';
+    }
+
+    // APP STATE
+    window.AppState = {
+      processedData: [],
+      showStatus: function (msg, type) {
+        let title = "Status Update";
+        if (type === 'success') title = "Matagumpay!";
+        else if (type === 'error') title = "May Problema";
+        showCenterModal(title, msg, type);
+      }
+    };
+
+    // SUB-TABS (Zone Dates)
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.sub-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetPane = btn.getAttribute('data-pane');
+          document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.zone-grid-pane').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          const pane = document.getElementById(targetPane);
+          if (pane) pane.classList.add('active');
+        });
+      });
+
+      // Initialize modules
+      if (window.UploadExcelModule) window.UploadExcelModule.init();
+      if (window.SendEmailsModule) window.SendEmailsModule.init();
+      if (window.InquiryLogsModule) window.InquiryLogsModule.init();
+    });
+
+    // ============================================
+  // BACKUP FUNCTION (Option A)
+  // ============================================
+  async function triggerBackup() {
+    const btn = document.getElementById('btnBackupNow');
+    if (!btn) return;
+    
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Backing up...';
+    
+    try {
+      const res = await fetch('/api/backup');
+      const result = await res.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Backup failed');
+      }
+      
+      // I-download ang bawat CSV as separate file
+      const timestamp = result.timestamp;
+      const files = result.files;
+      
+      // Gumawa ng ZIP using JSZip (kailangan i-load)
+      if (typeof JSZip === 'undefined') {
+        // Fallback: Download individual CSV files
+        for (const [tableName, csvContent] of Object.entries(files)) {
+          downloadCSV(csvContent, `SIWADI-${tableName}-${timestamp}.csv`);
+          // Small delay para hindi mag-conflict
+          await new Promise(r => setTimeout(r, 300));
+        }
+      } else {
+        // ZIP method
+        const zip = new JSZip();
+        for (const [tableName, csvContent] of Object.entries(files)) {
+          zip.file(`SIWADI-${tableName}-${timestamp}.csv`, csvContent);
+        }
+        
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `SIWADI-Backup-${timestamp}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+      
+      // Success modal
+      const counts = result.counts;
+      if (window.AppState && window.AppState.showStatus) {
+        window.AppState.showStatus(
+          `✅ Backup Complete!\n\n📊 ${counts.settings} settings\n📧 ${counts.emails} emails\n📋 ${counts.inquiries} inquiries\n💰 ${counts.balances} balances`,
+          'success'
+        );
+      }
+      
+    } catch (err) {
+      console.error('Backup error:', err);
+      if (window.AppState && window.AppState.showStatus) {
+        window.AppState.showStatus(`❌ Backup Error: ${err.message}`, 'error');
+      } else {
+        alert(`❌ Backup Error: ${err.message}`);
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+
+  function downloadCSV(content, filename) {
+    const blob = new Blob(['\ufeff' + content], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // I-attach ang button click
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btnBackupNow');
+    if (btn) {
+      btn.addEventListener('click', triggerBackup);
+    }
+  });
+
+  </script>
+
+  <!-- Standalone Module Scripts -->
+  <script src="/js/upload-excel.js"></script>
+  <script src="/js/send-emails.js"></script>
+  <script src="/js/inquiry-logs.js"></script>
+</body>
+</html>

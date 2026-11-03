@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Actions Manager - Tools</title>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1877f2;
+      --primary-dark: #166fe5;
+      --success: #42b72a;
+      --danger: #fa383e;
+      --bg-main: #f0f2f5;
+      --card-bg: #ffffff;
+      --text-main: #050505;
+      --text-sec: #65676b;
+      --border-color: #ccd0d5;
+      --card-border: #e4e6eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    .module-header {
+      background: #fff; border-bottom: 1px solid var(--card-border);
+      padding: 8px 16px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08); flex-shrink: 0;
+    }
+    .header-left-actions { display: flex; align-items: center; gap: 6px; }
+    .btn-action {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+      font-size: 0.85rem; font-weight: 600; color: #fff; border: none; border-radius: 6px;
+      cursor: pointer; text-decoration: none; background-color: var(--primary);
+    }
+    
+    .workspace { display: grid; grid-template-columns: 340px 1fr; gap: 10px; padding: 10px; flex: 1; overflow: hidden; }
+    .panel-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; display: flex; flex-direction: column; overflow: hidden; }
+    .panel-title { background: #fafbfc; padding: 8px 12px; font-size: 0.9rem; font-weight: 700; color: var(--primary); border-bottom: 1px solid var(--card-border); }
+    
+    .form-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .form-row { display: flex; flex-direction: column; gap: 4px; }
+    .form-row label { font-size: 0.82rem; font-weight: 600; color: var(--text-sec); }
+    .form-row input, .form-row select {
+      width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.88rem; text-transform: uppercase; outline: none;
+    }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; margin-top: 4px; cursor: pointer; }
+
+    .form-actions { display: flex; gap: 6px; padding-top: 10px; border-top: 1px solid var(--card-border); margin-top: 5px; }
+    .btn-std { padding: 6px 12px; font-size: 0.85rem; font-weight: 600; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: #f8f9fa; }
+    .btn-save { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .table-container { flex: 1; overflow: auto; }
+    table.data-pool-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
+    table.data-pool-table th { position: sticky; top: 0; background: #f0f2f5; color: var(--primary); font-weight: 700; text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--card-border); }
+    table.data-pool-table td { padding: 7px 12px; border-bottom: 1px solid var(--card-border); }
+    table.data-pool-table tr:hover { background-color: #e7f3ff; cursor: pointer; }
+
+    .badge-active { padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; background: #dcfce7; color: #15803d; }
+    .badge-inactive { padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; background: #fee2e2; color: #b91c1c; }
+  </style>
+</head>
+<body>
+
+  <header class="module-header">
+    <div class="header-left-actions">
+      <a href="/index.html" class="btn-action"><i class='bx bx-home'></i> ← Main Menu</a>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <input type="text" id="searchTableInput" placeholder="Search action..." oninput="filterActions(this.value)" style="padding: 5px 8px; border: 1px solid var(--border-color); border-radius: 4px;">
+      <div style="font-size: 1.15rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 6px;">
+        <i class='bx bx-check-square'></i> Request Actions Config
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- Entry / Edit Form -->
+    <section class="panel-card">
+      <div class="panel-title" id="formHeaderTitle">Add Action Taken</div>
+      <div class="form-body">
+        
+        <input type="hidden" id="editingId" value="">
+
+        <div class="form-row">
+          <label>Action Name (Gawaing Natapos):</label>
+          <input type="text" id="actionName" placeholder="e.g. REPAIRED">
+        </div>
+
+        <div class="form-row">
+          <label>Category:</label>
+          <input type="text" id="actionCategory" value="SERVICE_REQUEST">
+        </div>
+
+        <div class="form-row">
+          <label>Display Order:</label>
+          <input type="number" id="displayOrder" value="0">
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" id="actionActive" checked>
+          <span>Active Status (Available in Actions dropdown)</span>
+        </label>
+
+        <div class="form-actions">
+          <button type="button" class="btn-std btn-save" id="btnSubmit" onclick="saveAction()">
+            <i class='bx bx-save'></i> Save Action
+          </button>
+          <button type="button" class="btn-std" id="btnCancel" onclick="clearForm()" style="display: none; color: var(--danger);">Cancel</button>
+          <button type="button" class="btn-std" onclick="clearForm()">Clear</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Actions List -->
+    <section class="panel-card">
+      <div class="panel-title" style="display: flex; justify-content: space-between;">
+        <span>Configured Request Actions</span>
+        <span id="actionCount" style="font-size: 0.8rem; color: var(--text-sec);">0 Actions</span>
+      </div>
+      <div class="table-container">
+        <table class="data-pool-table">
+          <thead>
+            <tr>
+              <th style="width: 50px;">Order</th>
+              <th>Action Name</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th style="width: 80px; text-align: center;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/misc/request-actions-manager.js"></script>
+</body>
+</html>

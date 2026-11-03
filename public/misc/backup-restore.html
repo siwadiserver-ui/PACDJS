@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Backup & Restore - SIWADI PACD</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-soft: #f0f9ff;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --bg-main: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-sec: #64748b;
+      --border-color: #cbd5e1;
+      --card-border: #e2e8f0;
+    }
+
+    html.dark {
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --primary-soft: #1e293b;
+      --bg-main: #0b1120;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-sec: #94a3b8;
+      --border-color: #334155;
+      --card-border: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Module Header Toolbar */
+    .module-header {
+      background: var(--card-bg);
+      border-bottom: 1.5px solid var(--border-color);
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .header-title-badge {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    /* Workspace Layout */
+    .workspace {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 0.85rem;
+      padding: 0.85rem 1.25rem;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .panel-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+
+    .panel-title {
+      background: var(--bg-main);
+      padding: 0.6rem 0.95rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      border-bottom: 1.5px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .action-box {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .info-card {
+      background: var(--primary-soft);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 0.78rem;
+      color: var(--text-main);
+      line-height: 1.45;
+    }
+
+    .danger-card {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 0.78rem;
+      color: #991b1b;
+      line-height: 1.45;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.45rem 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+    .btn-success:hover { background: #15803d; }
+    .btn-danger { background: #fee2e2; color: var(--danger); border-color: #fecaca; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-secondary { background: var(--card-bg); color: var(--text-main); border: 1.5px solid var(--border-color); }
+    .btn-secondary:hover { background: var(--bg-main); }
+
+    /* Table */
+    .table-container { flex: 1; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: nowrap; }
+    th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-main);
+      color: var(--text-sec);
+      font-weight: 800;
+      text-align: left;
+      padding: 0.6rem 0.85rem;
+      border-bottom: 2px solid var(--border-color);
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      letter-spacing: 0.03em;
+      z-index: 5;
+    }
+    td {
+      padding: 0.6rem 0.85rem;
+      border-bottom: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+    tr:hover td { background-color: var(--primary-soft); }
+  </style>
+
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('pacd_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <header class="module-header">
+    <div class="header-title-badge">
+      <i class='bx bx-data'></i> DATABASE BACKUP & RESTORE UTILITY
+    </div>
+    <div>
+      <button type="button" class="btn btn-secondary" onclick="loadBackups()">
+        <i class='bx bx-refresh'></i> Refresh List
+      </button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    
+    <!-- 💾 BACKUP ACTIONS -->
+    <section class="panel-card">
+      <div class="panel-title">
+        <span><i class='bx bx-save'></i> Create Manual Backup</span>
+      </div>
+      <div class="action-box">
+        <div class="info-card">
+          <strong>Local Disk Backup:</strong> Ang bawat snapshot ay direktang ise-save sa server backup folder. Maaari mo ring i-download ang mga kopya sa iyong sariling computer bilang karagdagang kopya.
+        </div>
+
+        <button type="button" id="btnCreateBackup" class="btn btn-primary" style="padding: 10px; font-size: 0.85rem;" onclick="createBackup()">
+          <i class='bx bx-save' style="font-size: 1.2rem;"></i> BACKUP DATABASE NOW
+        </button>
+
+        <div class="danger-card" style="margin-top: 4px;">
+          <strong>CRITICAL WARNING:</strong> Ang pag-restore ng lumang backup ay mag-o-overwrite sa kasalukuyang data. Siguraduhing may pinakabagong backup bago mag-restore.
+        </div>
+      </div>
+    </section>
+
+    <!-- 📋 BACKUP HISTORY & ACTIONS -->
+    <section class="panel-card">
+      <div class="panel-title">
+        <span>📂 Available Database Backups (<span id="backupCount">0</span>)</span>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Filename</th>
+              <th>File Size</th>
+              <th>Date Created</th>
+              <th style="text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="backupTableBody">
+            <tr><td colspan="4" style="text-align: center; color: var(--text-sec); padding: 20px;">Loading backups...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', loadBackups);
+
+    async function loadBackups() {
+      const tbody = document.getElementById('backupTableBody');
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-sec); padding: 20px;"><i class='bx bx-loader-alt bx-spin'></i> Loading...</td></tr>`;
+
+      try {
+        const res = await fetch('/api/backup-restore/list');
+        const json = await res.json();
+
+        if (json.success && json.data) {
+          document.getElementById('backupCount').textContent = json.data.length;
+          if (json.data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-sec); padding: 20px;">Walang nakitang backup file. Pindutin ang "Backup Database Now".</td></tr>`;
+            return;
+          }
+
+          tbody.innerHTML = json.data.map(b => `
+            <tr>
+              <td><strong style="color: var(--primary);"><i class='bx bxs-file-archive'></i> ${b.filename}</strong></td>
+              <td style="font-family: monospace; font-weight: 700;">${b.size}</td>
+              <td>${new Date(b.createdAt).toLocaleString()}</td>
+              <td style="text-align: center;">
+                <div style="display: flex; gap: 4px; justify-content: center;">
+                  <a href="/api/backup-restore/download/${encodeURIComponent(b.filename)}" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem;" title="Download to PC">
+                    <i class='bx bx-download'></i> Download
+                  </a>
+                  <button class="btn btn-success" style="padding: 3px 8px; font-size: 0.72rem;" onclick="restoreBackup('${b.filename}')" title="Restore this Snapshot">
+                    <i class='bx bx-history'></i> Restore
+                  </button>
+                  <button class="btn btn-danger" style="padding: 3px 8px; font-size: 0.72rem;" onclick="deleteBackup('${b.filename}')" title="Delete Backup">
+                    <i class='bx bx-trash'></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--danger);">Error: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function createBackup() {
+      const btn = document.getElementById('btnCreateBackup');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Gumagawa ng Backup...`;
+
+      try {
+        const res = await fetch('/api/backup-restore/create', { method: 'POST' });
+        const json = await res.json();
+        if (json.success) {
+          alert('✅ ' + json.message);
+          loadBackups();
+        } else {
+          alert('❌ Error: ' + json.message);
+        }
+      } catch (e) {
+        alert('❌ Error: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    async function restoreBackup(filename) {
+      if (!confirm(`CRITICAL WARNING:\n\nSigurado ka bang nais mong i-RESTORE ang backup na:\n"${filename}"?\n\nMapapalitan ang kasalukuyang data at kusang mamamatay ang server!`)) {
+        return;
+      }
+
+      showRestoreOverlay(`Inihahanda ang database mula sa "${filename}"...`);
+
+      try {
+        await fetch('/api/backup-restore/restore', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename })
+        });
+        showManualRestartModal();
+      } catch (e) {
+        console.log('Server process exited for restore:', e);
+        showManualRestartModal();
+      }
+    }
+
+    function showRestoreOverlay(text) {
+      let overlay = document.getElementById('restoreCountdownOverlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'restoreCountdownOverlay';
+        overlay.style.cssText = `
+          position: fixed; inset: 0; background: rgba(15, 23, 42, 0.92);
+          z-index: 99999; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; color: #fff;
+          font-family: sans-serif; text-align: center; padding: 20px;
+        `;
+        document.body.appendChild(overlay);
+      }
+      overlay.innerHTML = `
+        <i class='bx bx-loader-alt bx-spin' style="font-size: 3.5rem; color: #38bdf8; margin-bottom: 16px;"></i>
+        <h2 style="font-size: 1.3rem; margin-bottom: 8px;">Isinasagawa ang Database Restore</h2>
+        <p style="color: #94a3b8; font-size: 0.95rem; max-width: 450px;">${text}</p>
+      `;
+      overlay.style.display = 'flex';
+    }
+
+    function showManualRestartModal() {
+      const overlay = document.getElementById('restoreCountdownOverlay');
+      if (!overlay) return;
+
+      overlay.innerHTML = `
+        <div style="background: #1e293b; border: 1.5px solid #334155; border-radius: 12px; padding: 28px; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+          <div style="font-size: 3rem; color: #22c55e; margin-bottom: 12px;">
+            <i class='bx bxs-check-circle'></i>
+          </div>
+          <h2 style="font-size: 1.4rem; color: #f8fafc; margin-bottom: 10px; font-weight: 800;">
+            RESTORE SUCCESSFUL!
+          </h2>
+          <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.6; margin-bottom: 20px;">
+            Matagumpay na na-stage ang backup database. Kusang pinatay ang server upang maisagawa ang pagpapalit ng file.
+          </p>
+          <div style="background: #0f172a; border: 1px dashed #38bdf8; border-radius: 8px; padding: 12px; margin-bottom: 24px; text-align: left;">
+            <strong style="color: #38bdf8; font-size: 0.85rem; display: block; margin-bottom: 4px;">📌 HAKBANG PARA MAITULOY:</strong>
+            <span style="color: #e2e8f0; font-size: 0.85rem;">
+              Pakibuksan o i-run muli ang iyong <strong>RESTART_PACD_SERVICE.bat</strong> o <strong>RUN_PACD_PORTAL.bat</strong> para mag-start ang program gamit ang bagong data.
+            </span>
+          </div>
+          <button type="button" onclick="window.location.reload()" style="background: #0284c7; color: white; border: none; border-radius: 6px; padding: 10px 24px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">
+            I-refresh ang Pahina (Pagkatapos i-start ang server)
+          </button>
+        </div>
+      `;
+    }
+
+    async function deleteBackup(filename) {
+      if (!confirm(`Nais mo bang tanggalin ang backup file na "${filename}"?`)) return;
+      try {
+        const res = await fetch(`/api/backup-restore/delete/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) loadBackups();
+        else alert('❌ Error: ' + json.message);
+      } catch (e) {
+        alert('❌ Error: ' + e.message);
+      }
+    }
+  </script>
+</body>
+</html>

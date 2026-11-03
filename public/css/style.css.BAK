@@ -1,0 +1,979 @@
+:root {
+  --fb-blue: #1877f2;
+  --fb-blue-hover: #166fe5;
+  --fb-bg: #e6f4fe; /* 💧 Fresh Soft Water Blue */
+  --fb-card-bg: #ffffff;
+  --fb-border: #ccd0d5;
+  --fb-card-border: #e4e6eb;
+  --fb-divider: #e4e6eb;
+  --fb-text-main: #050505;
+  --fb-text-sec: #65676b;
+  --fb-text: #050505;
+  --fb-secondary-text: #65676b;
+  --fb-hover-bg: #e4e6eb;
+  --fb-active-pill: #e7f3ff;
+  --fb-green: #22c55e;
+  --fb-red: #ef4444;
+  --fb-orange: #f97316;
+  --fb-purple: #8b5cf6;
+  --fb-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --fb-shadow-lg: 0 12px 28px 0 rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --font-fb: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  font-family: var(--font-fb); 
+}
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--fb-bg);
+  color: var(--fb-text-main);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   🏛️ NAVBAR & BRANDING
+   ========================================================================== */
+.navbar {
+  background: #ffffff;
+  border-bottom: 1px solid var(--fb-divider);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  flex-shrink: 0;
+  z-index: 1000;
+}
+
+.nav-brand { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  cursor: pointer; 
+}
+
+.brand-text h1 { 
+  font-size: 1.05rem; 
+  font-weight: 800; 
+  color: var(--fb-blue); 
+  line-height: 1; 
+}
+
+.brand-text span { 
+  font-size: 0.65rem; 
+  color: var(--fb-text-sec); 
+  font-weight: 600; 
+  text-transform: uppercase; 
+}
+
+.nav-tabs { 
+  display: flex; 
+  align-items: center; 
+  gap: 4px; 
+  height: 100%; 
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--fb-text-sec);
+  padding: 0 12px;
+  height: 100%;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-btn:hover { 
+  background: var(--fb-hover-bg); 
+  color: var(--fb-text-main); 
+}
+
+.tab-btn.active { 
+  color: var(--fb-blue); 
+  border-bottom: 3px solid var(--fb-blue); 
+}
+
+/* Dropdown Menus */
+.dropdown-container { 
+  position: relative; 
+  height: 100%; 
+  display: flex; 
+  align-items: center; 
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #ffffff;
+  border: 1px solid var(--fb-divider);
+  border-radius: 8px;
+  padding: 6px;
+  min-width: 230px;
+  box-shadow: var(--fb-shadow-lg);
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 1050;
+  margin-top: 2px;
+}
+
+.dropdown-menu.show { 
+  display: flex; 
+}
+
+.dropdown-header { 
+  font-size: 0.7rem; 
+  font-weight: 700; 
+  color: var(--fb-text-sec); 
+  text-transform: uppercase; 
+  padding: 4px 8px; 
+}
+
+.dropdown-item {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--fb-text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s;
+}
+
+.dropdown-item:hover { 
+  background: var(--fb-hover-bg); 
+}
+
+/* User Pill & Header Actions */
+.user-pill {
+  display: flex; 
+  align-items: center; 
+  gap: 6px;
+  background: var(--fb-hover-bg); 
+  padding: 3px 10px 3px 4px;
+  border-radius: 20px; 
+  font-size: 0.78rem; 
+  font-weight: 600;
+}
+
+.user-avatar {
+  width: 22px; 
+  height: 22px; 
+  border-radius: 50%;
+  background: #ccd0d5; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 0.75rem;
+}
+
+.user-role-badge { 
+  font-size: 0.6rem; 
+  background: var(--fb-blue); 
+  color: #fff; 
+  padding: 2px 6px; 
+  border-radius: 8px; 
+  font-weight: 700; 
+}
+
+.btn-universal-refresh {
+  background: #e4e6eb;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--fb-text-sec);
+  transition: all 0.2s ease;
+}
+
+.btn-universal-refresh:hover {
+  background: #d8dadf;
+  color: var(--fb-blue);
+}
+
+.btn-universal-refresh:active {
+  transform: scale(0.92);
+}
+
+.spin-refresh {
+  animation: spinAnim 0.7s linear infinite;
+}
+
+@keyframes spinAnim {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.btn-logout {
+  background: #e4e6eb; 
+  border: none; 
+  border-radius: 50%;
+  width: 28px; 
+  height: 28px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  cursor: pointer; 
+  font-size: 0.9rem; 
+  transition: background 0.15s;
+}
+
+.btn-logout:hover { 
+  background: #d8dadf; 
+  color: var(--fb-red); 
+}
+
+/* ==========================================================================
+   🖥️ MAIN WORKSPACE CONTAINER
+   ========================================================================== */
+.main-container {
+  flex: 1;
+  width: 100vw;
+  height: calc(100vh - 48px);
+  background-color: var(--fb-bg);
+  padding: 10px 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tab-content { 
+  display: none; 
+  width: 100%; 
+  height: 100%; 
+}
+
+.tab-content.active { 
+  display: flex; 
+  flex-direction: column; 
+}
+
+#tab-home {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* ==========================================================================
+   🌟 COMMAND CENTER DASHBOARD (REPLACES BENTO)
+   ========================================================================== */
+.dash-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Tier 1: Search & Command Strip */
+.dash-header-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--fb-card-bg);
+  border-radius: 10px;
+  padding: 10px 16px;
+  box-shadow: var(--fb-shadow);
+  border: 1px solid var(--fb-card-border);
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.dash-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.system-avatar img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.title-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--fb-blue);
+  letter-spacing: 0.6px;
+}
+
+.hero-titles h1 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--fb-text-main);
+  margin: 0;
+}
+
+.dash-search-box {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1.5px solid var(--fb-border);
+  border-radius: 8px;
+  padding: 3px 6px 3px 10px;
+  width: 460px;
+  max-width: 100%;
+  transition: all 0.2s ease;
+}
+
+.dash-search-box:focus-within {
+  border-color: var(--fb-blue);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.15);
+}
+
+.search-icon-left {
+  font-size: 1.1rem;
+  color: var(--fb-text-sec);
+  margin-right: 6px;
+}
+
+.dash-search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 0.82rem;
+  color: var(--fb-text-main);
+}
+
+.btn-search-action {
+  background: var(--fb-blue);
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease;
+}
+
+.btn-search-action:hover {
+  background: var(--fb-blue-hover);
+}
+
+.btn-search-action kbd {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.68rem;
+}
+
+/* Tier 2: KPI Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.kpi-card {
+  background: var(--fb-card-bg);
+  border: 1px solid var(--fb-card-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: var(--fb-shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.kpi-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--fb-text-sec);
+  text-transform: uppercase;
+}
+
+.kpi-badge-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--accent-bg, #f1f5f9);
+  color: var(--accent, var(--fb-blue));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.kpi-value-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 8px;
+}
+
+.kpi-number {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--fb-text-main);
+  line-height: 1;
+}
+
+.kpi-sub-stats {
+  display: flex;
+  gap: 4px;
+}
+
+.stat-tag {
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.tag-done {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.tag-pending {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.kpi-progress {
+  width: 100%;
+  height: 4px;
+  background: #f1f5f9;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.kpi-progress-bar {
+  height: 100%;
+  background: var(--fb-blue);
+  transition: width 0.4s ease;
+}
+
+/* Tier 3: 70/30 Split Layout */
+.dash-main-split {
+  display: grid;
+  grid-template-columns: 1fr 310px;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+.split-left-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.charts-duo-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 10px;
+  height: 195px;
+  flex-shrink: 0;
+}
+
+.dash-panel {
+  background: var(--fb-card-bg);
+  border: 1px solid var(--fb-card-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: var(--fb-shadow);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.dash-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.dash-panel-header h3 {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--fb-text-main);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-canvas-container {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  width: 100%;
+}
+
+/* Activity Table */
+.table-responsive {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.dash-modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.dash-modern-table th {
+  position: sticky;
+  top: 0;
+  text-align: left;
+  padding: 6px 8px;
+  background: #f8fafc;
+  color: var(--fb-text-sec);
+  font-weight: 700;
+  border-bottom: 1px solid var(--fb-divider);
+  z-index: 2;
+}
+
+.dash-modern-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--fb-divider);
+  color: var(--fb-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-badge { 
+  padding: 2px 6px; 
+  border-radius: 4px; 
+  font-weight: 700; 
+  font-size: 0.62rem; 
+}
+
+.st-completed { 
+  background: #dcfce7; 
+  color: #16a34a; 
+}
+
+.st-pending { 
+  background: #fee2e2; 
+  color: #ef4444; 
+}
+
+.btn-refresh-pill {
+  background: #f1f5f9;
+  border: 1px solid var(--fb-border);
+  padding: 3px 8px;
+  border-radius: 14px;
+  font-size: 0.68rem;
+  color: var(--fb-text-sec);
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.btn-refresh-pill:hover {
+  background: #e2e8f0;
+  color: var(--fb-blue);
+}
+
+/* Right Ops Column */
+.split-right-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.quick-links-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.quick-link-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border: 1px solid var(--fb-border);
+  border-radius: 8px;
+  padding: 10px 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--fb-text-main);
+  cursor: pointer;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.quick-link-btn i {
+  font-size: 1.3rem;
+}
+
+.quick-link-btn:hover {
+  background: #eff6ff;
+  border-color: var(--fb-blue);
+  color: var(--fb-blue);
+}
+
+.broadcast-panel {
+  flex: 1;
+}
+
+.broadcast-desc {
+  font-size: 0.7rem;
+  color: var(--fb-text-sec);
+  margin-bottom: 8px;
+}
+
+.broadcast-input-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.broadcast-input-group textarea {
+  width: 100%;
+  flex: 1;
+  min-height: 60px;
+  box-sizing: border-box;
+  border: 1px solid var(--fb-border);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 0.78rem;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  margin-bottom: 8px;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.broadcast-input-group textarea:focus {
+  border-color: var(--fb-blue);
+  background: #ffffff;
+}
+
+.btn-broadcast-submit {
+  width: 100%;
+  background: #0f172a;
+  color: #fff;
+  border: none;
+  padding: 7px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s ease;
+}
+
+.btn-broadcast-submit:hover {
+  background: var(--fb-blue);
+}
+
+.live-pill {
+  font-size: 0.65rem;
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.live-dot-ping {
+  width: 6px;
+  height: 6px;
+  background: #ef4444;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* ==========================================================================
+   💬 FLOATING POPUP NOTIFICATIONS CONTAINER
+   ========================================================================== */
+.chat-popup-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 9999;
+  pointer-events: none;
+  width: 100%;
+  max-width: 420px;
+  padding: 16px;
+}
+
+.chat-popup-card {
+  pointer-events: auto;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--fb-divider);
+  border-top: 4px solid var(--fb-blue);
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: popInCenter 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.chat-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-popup-user {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--fb-blue);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-popup-time {
+  font-size: 0.72rem;
+  color: var(--fb-text-sec);
+}
+
+.chat-popup-body {
+  font-size: 0.95rem;
+  color: var(--fb-text-main);
+  line-height: 1.45;
+  word-break: break-word;
+  background: #f8fafc;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--fb-divider);
+}
+
+.btn-close-popup {
+  background: #e4e6eb;
+  border: none;
+  color: var(--fb-text-sec);
+  cursor: pointer;
+  font-size: 1.1rem;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-close-popup:hover {
+  background: #d8dadf;
+  color: var(--fb-red);
+}
+
+@keyframes popInCenter {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ==========================================================================
+   🪟 SEARCH POPUP MODAL
+   ========================================================================== */
+.search-modal-overlay {
+  position: fixed;
+  top: 0; 
+  left: 0;
+  width: 100vw; 
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.search-modal-card {
+  background: #ffffff;
+  width: 90%;
+  max-width: 920px;
+  height: 75vh;
+  border-radius: 10px;
+  box-shadow: var(--fb-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header-search {
+  padding: 12px 18px;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--fb-divider);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-body-search {
+  flex: 1;
+  padding: 12px 18px;
+  overflow-y: auto;
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  color: var(--fb-text-sec);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   🪟 WORKSPACE IFRAME & UTILITIES
+   ========================================================================== */
+.workspace-wrapper {
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  border: 1px solid var(--fb-divider);
+  border-radius: 8px;
+  box-shadow: var(--fb-shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace-iframe { 
+  width: 100%; 
+  height: 100%; 
+  border: none; 
+  background: transparent; 
+  display: flex; 
+  flex: 1; 
+}
+
+.workspace-placeholder { 
+  height: 100%; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  text-align: center; 
+  padding: 20px; 
+}
+
+/* 📦 COMBOBOX WRAPPER */
+.combobox-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.combobox-wrapper input {
+  width: 100%;
+  padding: 5px 28px 5px 8px;
+  border: 1px solid var(--fb-border);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  outline: none;
+}
+
+.combobox-wrapper input:focus {
+  border-color: var(--fb-blue);
+}
+
+.combobox-wrapper select {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 28px;
+  height: 100%;
+  opacity: 0.6;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.combobox-wrapper select:hover {
+  opacity: 1;
+}
+
+/* 📱 RESPONSIVENESS */
+@media (max-width: 1100px) {
+  .kpi-grid { 
+    grid-template-columns: repeat(2, 1fr); 
+  }
+  .dash-main-split { 
+    grid-template-columns: 1fr; 
+  }
+  .charts-duo-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .panel-canvas-container {
+    height: 160px;
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "SIWADI PACD Portal",
+  "short_name": "PACD Portal",
+  "description": "Siniloan Water District - Public Assistance and Complaints Desk",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1877f2",
+  "icons": [
+    {
+      "src": "/pacd+.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pacd+.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

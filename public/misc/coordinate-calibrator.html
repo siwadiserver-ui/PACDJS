@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drag & Drop Print Calibrator - Commercial Division</title>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1877f2;
+      --bg: #1e293b;
+      --panel: #0f172a;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Top Toolbar */
+    .calibrator-header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header-title { font-size: 1.1rem; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+    
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-back { background: #475569; color: #fff; text-decoration: none; }
+    .btn-reload { background: #3b82f6; color: #fff; }
+    .btn-save { background: #10b981; color: #fff; }
+    .btn:hover { opacity: 0.9; }
+
+    /* Main Workspace */
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 15px;
+      padding: 15px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Canvas Paper Viewport */
+    .canvas-viewport {
+      background: #334155;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+      overflow: auto;
+      position: relative;
+    }
+
+    /* 22cm x 16.5cm Simulated Half-Sheet Content Box */
+    .paper-canvas {
+      width: 624px;   /* 22cm * 28.3465 pt */
+      height: 468px;  /* 16.5cm * 28.3465 pt */
+      background: #ffffff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      position: relative;
+      border: 2px dashed #94a3b8;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .canvas-grid-line {
+      position: absolute;
+      background: rgba(0,0,0,0.05);
+    }
+
+    /* Draggable Item Element */
+    .drag-item {
+      position: absolute;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: grab;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      white-space: nowrap;
+      transform: translate(0, 0);
+    }
+    .drag-item:active { cursor: grabbing; z-index: 100 !important; }
+    .drag-item.selected {
+      outline: 2px solid #ef4444;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+      z-index: 99 !important;
+    }
+
+    /* Side Control Panel */
+    .side-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .side-panel-title {
+      padding: 10px 14px;
+      background: #1e293b;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+      color: #94a3b8;
+    }
+    .coords-list {
+      padding: 10px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .coord-row {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .coord-row:hover, .coord-row.active {
+      border-color: #38bdf8;
+      background: #0f172a;
+    }
+    .coord-label { font-weight: 600; color: #f8fafc; }
+    .coord-vals { font-family: monospace; color: #38bdf8; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Toolbar -->
+  <header class="calibrator-header">
+    <div class="header-title">
+      <i class='bx bx-move'></i> Service Request Print Calibrator (Drag & Drop)
+    </div>
+    <div class="header-actions">
+      <span style="font-size: 0.8rem; color: var(--muted); margin-right: 10px;">
+        💡 Tip: Gamitin ang Arrow Keys para sa fine-tuning
+      </span>
+      <button class="btn btn-reload" onclick="loadCoordinates()"><i class='bx bx-refresh'></i> Reload</button>
+      <button class="btn btn-save" onclick="saveCoordinates()"><i class='bx bx-save'></i> Save Coordinates</button>
+      <a href="/commercial/service-request.html" class="btn btn-back"><i class='bx bx-arrow-back'></i> Back</a>
+    </div>
+  </header>
+
+  <!-- Workspace -->
+  <main class="workspace">
+    
+    <!-- Visual Paper Canvas (22cm x 16.5cm Slip Area) -->
+    <div class="canvas-viewport">
+      <div class="paper-canvas" id="paperCanvas">
+        <!-- Draggable items rendered via JS -->
+      </div>
+    </div>
+
+    <!-- Live Position Readout Panel -->
+    <aside class="side-panel">
+      <div class="side-panel-title">Fields & Exact Coordinates (Points)</div>
+      <div class="coords-list" id="coordsList"></div>
+    </aside>
+
+  </main>
+
+  <script>
+    const CONTENT_HEIGHT = 467.7; // 16.5cm in points
+    let coordinates = {};
+    let activeFieldKey = null;
+
+    // Field Color Palette
+    const fieldColors = {
+      'Reference Number': { bg: '#fee2e2', text: '#dc2626' },
+      'Account Number': { bg: '#e0e7ff', text: '#4338ca' },
+      'Account Name': { bg: '#dcfce7', text: '#15803d' },
+      'Address': { bg: '#fef3c7', text: '#b45309' },
+      'Meter Number': { bg: '#f3e8ff', text: '#7e22ce' },
+      'Reading': { bg: '#cffafe', text: '#0e7490' },
+      'Requested By': { bg: '#ffedd5', text: '#c2410c' },
+      'Request Received By': { bg: '#fce7f3', text: '#be185d' },
+      'Date & Time Requested': { bg: '#e2e8f0', text: '#334155' },
+      'Contact Number': { bg: '#ccfbf1', text: '#0f766e' },
+      'Request Details': { bg: '#f1f5f9', text: '#0f172a' },
+      'Please specify': { bg: '#fae8ff', text: '#86198f' }
+    };
+
+    window.addEventListener('DOMContentLoaded', loadCoordinates);
+
+    // 1. Fetch Coordinates mula sa server
+    async function loadCoordinates() {
+      try {
+        const res = await fetch('/api/misc/coordinates');
+        const data = await res.json();
+        if (data.success && data.data) {
+          coordinates = data.data;
+          renderDraggables();
+          renderSideList();
+        }
+      } catch (err) {
+        alert('Error loading coordinates: ' + err.message);
+      }
+    }
+
+    // 2. Render Draggables sa loob ng Canvas
+    function renderDraggables() {
+      const canvas = document.getElementById('paperCanvas');
+      canvas.innerHTML = '';
+
+      Object.entries(coordinates).forEach(([field, [x, y]]) => {
+        // Convert bottom-left Cartesian Y to top-down screen Y
+        const screenY = CONTENT_HEIGHT - y;
+        const color = fieldColors[field] || { bg: '#e2e8f0', text: '#1e293b' };
+
+        const el = document.createElement('div');
+        el.className = 'drag-item';
+        el.id = `drag_${field.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        el.dataset.field = field;
+        el.style.left = `${x}px`;
+        el.style.top = `${screenY}px`;
+        el.style.backgroundColor = color.bg;
+        el.style.color = color.text;
+        el.innerHTML = `<i class='bx bx-dots-vertical-rounded'></i> ${field}`;
+
+        // Event Listeners for Dragging
+        el.addEventListener('mousedown', initDrag);
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectField(field);
+        });
+
+        canvas.appendChild(el);
+      });
+    }
+
+    // 3. Render Coordinate Values sa Sidebar
+    function renderSideList() {
+      const list = document.getElementById('coordsList');
+      list.innerHTML = Object.entries(coordinates).map(([field, [x, y]]) => `
+        <div class="coord-row ${activeFieldKey === field ? 'active' : ''}" 
+             id="row_${field.replace(/[^a-zA-Z0-9]/g, '_')}"
+             onclick="selectField('${field}')">
+          <span class="coord-label">${field}</span>
+          <span class="coord-vals">X:${x.toFixed(1)}, Y:${y.toFixed(1)}</span>
+        </div>
+      `).join('');
+    }
+
+    function selectField(field) {
+      activeFieldKey = field;
+      document.querySelectorAll('.drag-item').forEach(el => el.classList.remove('selected'));
+      document.querySelectorAll('.coord-row').forEach(el => el.classList.remove('active'));
+
+      const safeKey = field.replace(/[^a-zA-Z0-9]/g, '_');
+      const targetEl = document.getElementById(`drag_${safeKey}`);
+      const targetRow = document.getElementById(`row_${safeKey}`);
+
+      if (targetEl) targetEl.classList.add('selected');
+      if (targetRow) targetRow.classList.add('active');
+    }
+
+    // 4. Drag & Drop Logic
+    function initDrag(e) {
+      const el = e.currentTarget;
+      const field = el.dataset.field;
+      selectField(field);
+
+      const canvas = document.getElementById('paperCanvas');
+      const canvasRect = canvas.getBoundingClientRect();
+
+      let shiftX = e.clientX - el.getBoundingClientRect().left;
+      let shiftY = e.clientY - el.getBoundingClientRect().top;
+
+      function onMouseMove(moveEvent) {
+        let newX = moveEvent.clientX - canvasRect.left - shiftX;
+        let newY = moveEvent.clientY - canvasRect.top - shiftY;
+
+        // Boundaries
+        newX = Math.max(0, Math.min(newX, canvasRect.width - el.offsetWidth));
+        newY = Math.max(0, Math.min(newY, canvasRect.height - el.offsetHeight));
+
+        el.style.left = `${newX}px`;
+        el.style.top = `${newY}px`;
+
+        // Update Math Cartesian Coordinates
+        const cartesianY = CONTENT_HEIGHT - newY;
+        coordinates[field] = [parseFloat(newX.toFixed(2)), parseFloat(cartesianY.toFixed(2))];
+
+        // Update Sidebar Numbers
+        const safeKey = field.replace(/[^a-zA-Z0-9]/g, '_');
+        const rowEl = document.getElementById(`row_${safeKey}`);
+        if (rowEl) {
+          rowEl.querySelector('.coord-vals').textContent = `X:${newX.toFixed(1)}, Y:${cartesianY.toFixed(1)}`;
+        }
+      }
+
+      function onMouseUp() {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    }
+
+    // 5. Arrow Keys Nudge Fine-Tuning
+    window.addEventListener('keydown', (e) => {
+      if (!activeFieldKey || !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+      e.preventDefault();
+
+      const safeKey = activeFieldKey.replace(/[^a-zA-Z0-9]/g, '_');
+      const el = document.getElementById(`drag_${safeKey}`);
+      if (!el) return;
+
+      let [x, y] = coordinates[activeFieldKey];
+      const step = e.shiftKey ? 5 : 1; // Shift + Arrow = 5px jump
+
+      if (e.key === 'ArrowLeft') x -= step;
+      if (e.key === 'ArrowRight') x += step;
+      if (e.key === 'ArrowUp') y += step;     // Cartesian UP
+      if (e.key === 'ArrowDown') y -= step;   // Cartesian DOWN
+
+      coordinates[activeFieldKey] = [parseFloat(x.toFixed(2)), parseFloat(y.toFixed(2))];
+      el.style.left = `${x}px`;
+      el.style.top = `${CONTENT_HEIGHT - y}px`;
+
+      const rowEl = document.getElementById(`row_${safeKey}`);
+      if (rowEl) {
+        rowEl.querySelector('.coord-vals').textContent = `X:${x.toFixed(1)}, Y:${y.toFixed(1)}`;
+      }
+    });
+
+    // 6. Save Coordinates back to Server
+    async function saveCoordinates() {
+      try {
+        const res = await fetch('/api/misc/coordinates/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(coordinates)
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('✅ Tagumpay! Nai-save ang calibrated coordinates sa coordinates.json.');
+        } else {
+          alert('Error saving coordinates: ' + data.message);
+        }
+      } catch (err) {
+        alert('Server Error: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

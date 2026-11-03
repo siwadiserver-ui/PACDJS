@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Request Management - Engineering Division</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-soft: #f0f9ff;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --purple: #7c3aed;
+      --bg-main: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-sec: #64748b;
+      --border-color: #cbd5e1;
+      --card-border: #e2e8f0;
+    }
+
+    html.dark {
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --primary-soft: #1e293b;
+      --bg-main: #0b1120;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-sec: #94a3b8;
+      --border-color: #334155;
+      --card-border: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Top Toolbar */
+    .module-header {
+      background: var(--card-bg);
+      border-bottom: 1.5px solid var(--border-color);
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .header-left-actions { display: flex; align-items: center; gap: 10px; }
+    .header-title-badge {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.45rem 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.15s ease;
+    }
+    .btn-action:hover { opacity: 0.9; }
+
+    .header-right-tools {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-right-tools select, .header-right-tools input {
+      padding: 0.4rem 0.75rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-main);
+      background: var(--card-bg);
+      outline: none;
+    }
+    .header-right-tools select:focus, .header-right-tools input:focus {
+      border-color: var(--primary);
+    }
+
+    /* Workspace Full-Screen Table */
+    .workspace { padding: 0.85rem 1.25rem; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .panel-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .panel-title {
+      background: var(--bg-main);
+      padding: 0.6rem 0.95rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      border-bottom: 1.5px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .table-container { flex: 1; overflow: auto; }
+    table.data-pool-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: nowrap; }
+    table.data-pool-table th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-main);
+      color: var(--text-sec);
+      font-weight: 800;
+      text-align: left;
+      padding: 0.6rem 0.85rem;
+      border-bottom: 2px solid var(--border-color);
+      border-right: 1px solid var(--card-border);
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      letter-spacing: 0.03em;
+      z-index: 10;
+    }
+    table.data-pool-table td {
+      padding: 0.6rem 0.85rem;
+      border-bottom: 1px solid var(--card-border);
+      border-right: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+    table.data-pool-table tr:hover td { background-color: var(--primary-soft); cursor: pointer; }
+    
+    /* Badges */
+    .status-badge { padding: 2px 7px; border-radius: 4px; font-size: 0.68rem; font-weight: 800; }
+    .st-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde047; }
+    .st-completed { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .st-inprogress { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px);
+      display: none; align-items: center; justify-content: center; z-index: 3000;
+    }
+    .modal-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      width: 850px;
+      max-width: 95%;
+      max-height: 92vh;
+      border: 1.5px solid var(--border-color);
+      box-shadow: 0 16px 36px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-header {
+      background: var(--bg-main);
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .modal-body {
+      padding: 16px 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .modal-footer {
+      background: var(--bg-main);
+      border-top: 1px solid var(--card-border);
+      padding: 10px 18px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* Info Banner with Specify */
+    .info-banner {
+      background: var(--primary-soft);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+    .info-banner div strong { color: var(--text-sec); }
+    .specify-box {
+      grid-column: span 2;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-top: 2px;
+    }
+    
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 0.78rem; font-weight: 700; color: var(--text-sec); }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 0.42rem 0.7rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      outline: none;
+      text-transform: uppercase;
+      background: var(--card-bg);
+      color: var(--text-main);
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--primary);
+    }
+
+    /* Trigger Display Boxes */
+    .trigger-display-box {
+      width: 100%;
+      min-height: 40px;
+      padding: 8px 12px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .trigger-display-box:hover { background: var(--primary-soft); border-color: var(--primary); }
+    .trigger-display-box.placeholder { color: var(--text-sec); font-weight: 600; }
+
+    /* Sub-Selector Modals */
+    .selector-sub-modal { width: 800px; max-width: 95%; max-height: 85vh; }
+    .split-plumber-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .plumber-section { border: 1.5px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--bg-main); }
+    .plumber-section-title {
+      font-size: 0.76rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1.5px solid var(--border-color);
+      letter-spacing: 0.03em;
+    }
+    
+    .checklist-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding: 8px;
+      background: var(--bg-main);
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+    }
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      transition: all 0.15s;
+    }
+    .check-label:hover { background: var(--primary-soft); border-color: var(--primary); }
+    .check-label input { cursor: pointer; accent-color: var(--primary); }
+
+    .btn-save-modal {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-save-modal:hover { background: var(--primary-dark); }
+    .btn-cancel-modal {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-sec);
+      cursor: pointer;
+    }
+    .btn-cancel-modal:hover { background: var(--bg-main); color: var(--text-main); }
+
+    /* Custom Right-Click Context Menu */
+    .custom-context-menu {
+      position: fixed;
+      display: none;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      z-index: 5000;
+      min-width: 180px;
+      padding: 4px 0;
+    }
+    .context-menu-item {
+      padding: 8px 14px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .context-menu-item:hover {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .material-qty-input {
+      width: 48px;
+      padding: 2px 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border: 1.5px solid var(--border-color);
+      border-radius: 4px;
+      text-align: center;
+      background: var(--card-bg);
+      color: var(--text-main);
+      outline: none;
+    }
+    .material-qty-input:focus {
+      border-color: var(--primary);
+    }
+  </style>
+
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('pacd_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+<!-- Top Toolbar -->
+  <header class="module-header">
+    <div class="header-left-actions">
+      <div class="header-title-badge">
+        <i class='bx bx-wrench'></i> ENGINEERING SERVICE REQUESTS
+      </div>
+      <button type="button" class="btn-action" style="background-color: var(--purple);" onclick="exportServiceRequestsEngrToExcel()">
+        <i class='bx bx-file'></i> Export Excel
+      </button>
+    </div>
+
+    <div class="header-right-tools">
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; color: var(--text-sec);">
+        <label>Status:</label>
+          <select id="statusFilter" onchange="loadDataPool()">
+            <option value="ALL" selected>ALL</option>
+            <option value="PENDING">PENDING</option>
+            <option value="COMPLETED">COMPLETED</option>
+          </select>
+      </div>
+
+      <input type="text" id="searchInput" placeholder="Search reference, account, name..." oninput="filterDataPool(this.value)" style="width: 250px;">
+    </div>
+  </header>
+
+  <!-- Workspace Table View -->
+  <main class="workspace">
+    <section class="panel-card">
+      <div class="panel-title">
+        <span>Incoming Service Requests (Double-click row to update accomplishment)</span>
+        <span id="recordCount" style="font-size: 0.76rem; color: var(--text-sec);">0 Records</span>
+      </div>
+      <div class="table-container">
+        <table class="data-pool-table">
+          <thead>
+            <tr>
+              <th>Ref #</th>
+              <th>Account #</th>
+              <th>Account Name</th>
+              <th>Address</th>
+              <th>Date Requested</th>
+              <th>Request Details</th>
+              <th>Specify</th>
+              <th>Status</th>
+              <th>Completed By</th>
+              <th>Action Taken</th>
+              <th>Materials Used</th>
+              <th>Completion Date</th>
+              <th>Plumber Remarks</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- 🛠️ 1. MALINIS NA UPDATE ACCOMPLISHMENT MODAL             -->
+  <!-- ======================================================== -->
+  <div id="updateModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span>🔧 Update Service Request Accomplishment</span>
+          <span id="lblModalLoggedUser" style="font-size: 0.75rem; font-weight: 700; background: var(--primary-soft); color: var(--primary); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border-color);">👤 USER</span>
+        </div>
+        <button type="button" onclick="closeModal('updateModal')" style="border: none; background: transparent; font-size: 1.4rem; cursor: pointer; color: var(--text-sec);">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="modalRecordId">
+
+        <!-- Concessionaire Details Info Banner with Received By & Specify -->
+        <div class="info-banner">
+          <div><strong>Ref Number:</strong> <span id="lblRef" style="color: var(--danger); font-weight: 800;">-</span></div>
+          <div><strong>Account No:</strong> <span id="lblAcc">-</span></div>
+          <div><strong>Name:</strong> <span id="lblName" style="font-weight: 700;">-</span></div>
+          <div><strong>Received By (Commercial):</strong> <span id="lblReceivedBy" style="font-weight: 700; color: var(--primary);">-</span></div>
+          <div><strong>Address:</strong> <span id="lblAddress">-</span></div>
+          <div><strong>Date Requested:</strong> <span id="lblDateReq">-</span></div>
+          <div style="grid-column: span 2;"><strong>Request Details:</strong> <span id="lblDetails" style="color: var(--primary); font-weight: 700;">-</span></div>
+          
+          <div class="specify-box">
+            <strong style="color: var(--danger);">📌 Specify (Commercial):</strong>
+            <span id="lblSpecify" style="font-weight: 600; margin-left: 6px;">N/A</span>
+          </div>
+        </div>
+
+        <!-- Assigned Plumbers Trigger Box -->
+        <div class="form-group">
+          <label>👥 Completed By (Plumbers):</label>
+          <div id="boxPlumbers" class="trigger-display-box placeholder" onclick="openPlumbersSelector()">
+            <span id="txtSelectedPlumbers">-- PLEASE SELECT PLUMBERS --</span>
+            <i class='bx bx-chevron-right' style="font-size: 1.2rem;"></i>
+          </div>
+        </div>
+
+        <!-- Action Taken Trigger Box -->
+        <div class="form-group">
+          <label>⚙️ Action Taken:</label>
+          <div id="boxActions" class="trigger-display-box placeholder" onclick="openActionsSelector()">
+            <span id="txtSelectedActions">-- PLEASE SELECT ACTION(S) --</span>
+            <i class='bx bx-chevron-right' style="font-size: 1.2rem;"></i>
+          </div>
+        </div>
+
+        <!-- Materials Used Trigger Box -->
+        <div class="form-group">
+          <label>📦 Materials Used & Quantity:</label>
+          <div id="boxMaterials" class="trigger-display-box placeholder" onclick="openMaterialsSelector()">
+            <span id="txtSelectedMaterials">WALA</span>
+            <i class='bx bx-chevron-right' style="font-size: 1.2rem;"></i>
+          </div>
+        </div>
+
+        <!-- Completion Date & Time + Status + Updated By -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label>📅 Completion Date & Time:</label>
+            <input type="datetime-local" id="txtCompletionDate">
+          </div>
+          <div class="form-group">
+            <label>🏷️ Status:</label>
+            <select id="selFinalStatus" style="font-weight: 800;">
+              <option value="COMPLETED" style="color: var(--success);">COMPLETED</option>
+              <option value="PENDING" style="color: var(--danger);">PENDING</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>👤 Updated By (Encoder):</label>
+            <input type="text" id="txtUpdatedBy" readonly style="font-weight: 800; color: var(--primary); background: var(--bg-main); cursor: not-allowed;">
+          </div>
+        </div>
+
+        <!-- Plumber Remarks -->
+        <div class="form-group">
+          <label>📝 Plumber / Accomplishment Remarks:</label>
+          <textarea id="txtPlumberRemarks" rows="2" placeholder="Tala ng tubero sa site..."></textarea>
+        </div>
+      </div>
+
+        <div class="modal-footer">
+        <button type="button" class="btn-cancel-modal" onclick="closeModal('updateModal')">Cancel</button>
+        
+        <!-- 🖨️ Bagong Print Accomplishment Button -->
+        <button type="button" class="btn-action" style="background-color: #0284c7; padding: 0.45rem 1rem;" onclick="triggerPrintAccomplishmentModal()">
+          <i class='bx bx-printer'></i> Print Accomplishment
+        </button>
+
+        <button type="button" class="btn-save-modal" onclick="saveAccomplishment()">
+          <i class='bx bx-save'></i> Save Accomplishment
+        </button>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 👥 2. PLUMBERS CHECKLIST (REGULAR vs JO)                 -->
+  <!-- ======================================================== -->
+  <div id="plumbersModal" class="modal-overlay" style="z-index: 3100;">
+    <div class="modal-card selector-sub-modal">
+      <div class="modal-header">
+        <span>👥 Select Plumbers (Regular vs JO)</span>
+        <button type="button" onclick="closeModal('plumbersModal')" style="border: none; background: transparent; font-size: 1.4rem; cursor: pointer; color: var(--text-sec);">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="split-plumber-grid">
+          <div class="plumber-section">
+            <div class="plumber-section-title" style="color: var(--primary);">REGULAR PLUMBERS</div>
+            <div id="regularPlumbersGrid" style="max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;"></div>
+          </div>
+          <div class="plumber-section">
+            <div class="plumber-section-title" style="color: var(--warning);">JOB ORDER (JO) PLUMBERS</div>
+            <div id="joPlumbersGrid" style="max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel-modal" onclick="closeModal('plumbersModal')">Cancel</button>
+        <button type="button" class="btn-save-modal" onclick="applyPlumbersSelection()">Confirm Selection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- ⚙️ 3. ACTIONS CHECKLIST MODAL (2-COLUMNS)                -->
+  <!-- ======================================================== -->
+  <div id="actionsModal" class="modal-overlay" style="z-index: 3100;">
+    <div class="modal-card selector-sub-modal">
+      <div class="modal-header">
+        <span>⚙️ Request Actions Selection</span>
+        <button type="button" onclick="closeModal('actionsModal')" style="border: none; background: transparent; font-size: 1.4rem; cursor: pointer; color: var(--text-sec);">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="actionsGrid" class="checklist-2col"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel-modal" onclick="closeModal('actionsModal')">Cancel</button>
+        <button type="button" class="btn-save-modal" onclick="applyActionsSelection()">Confirm Selection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 📦 4. MATERIALS CHECKLIST MODAL (2-COLUMNS)              -->
+  <!-- ======================================================== -->
+  <div id="materialsModal" class="modal-overlay" style="z-index: 3100;">
+    <div class="modal-card selector-sub-modal">
+      <div class="modal-header">
+        <span>📦 Materials Pool Selection</span>
+        <button type="button" onclick="closeModal('materialsModal')" style="border: none; background: transparent; font-size: 1.4rem; cursor: pointer; color: var(--text-sec);">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; gap: 12px; margin-bottom: 6px;">
+          <button type="button" class="btn-cancel-modal" style="padding: 4px 10px; font-size: 0.78rem;" onclick="setMaterialsNone()">Set as WALA</button>
+        </div>
+        <div id="materialsGrid" class="checklist-2col"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel-modal" onclick="closeModal('materialsModal')">Cancel</button>
+        <button type="button" class="btn-save-modal" onclick="applyMaterialsSelection()">Confirm Selection</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/engineering/service-request-engr.js"></script>
+
+  <!-- Custom Right-Click Menu -->
+  <div id="customContextMenu" class="custom-context-menu">
+    <div class="context-menu-item" onclick="triggerDirectPrintFromContext()">
+      <i class='bx bx-printer' style="font-size: 1.1rem; color: var(--primary);"></i> Print Form
+    </div>
+    <div class="context-menu-item" onclick="openSelectedRowModal()">
+      <i class='bx bx-edit' style="font-size: 1.1rem; color: var(--warning);"></i> Update Accomplishment
+    </div>
+  </div>
+</body>
+</html>

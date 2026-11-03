@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIWADI - PACD Public Assistance & Complaints Desk</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  
+  <!-- App Icons -->
+  <link rel="icon" type="image/png" href="/pacd+.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0284c7">
+
+  <!-- Chart.js & Socket.IO -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Supabase JS Client for Realtime Complaints -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg-page: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-sidebar: #0f172a;
+      --sidebar-text: #94a3b8;
+      --sidebar-hover: rgba(255, 255, 255, 0.06);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --primary-soft: #e0f2fe;
+      --sidebar-width: 270px;
+      --header-height: 64px;
+      --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    html.dark {
+      --bg-page: #090d16;
+      --bg-card: #131c2e;
+      --bg-sidebar: #0b1120;
+      --sidebar-text: #94a3b8;
+      --sidebar-hover: rgba(255, 255, 255, 0.05);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #1e293b;
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --primary-soft: #0c4a6e;
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    html, body { height: 100%; width: 100%; overflow: hidden; background-color: var(--bg-page); color: var(--text-main); }
+    
+    .app-layout {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 📌 DARK GLASS COLLAPSIBLE SIDEBAR */
+    aside.sidebar {
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: var(--bg-sidebar);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 100;
+      transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    aside.sidebar.collapsed {
+      margin-left: calc(-1 * var(--sidebar-width));
+    }
+
+    .sidebar-brand {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      user-select: none;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .sidebar-brand img {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 12px rgba(2, 132, 199, 0.4);
+    }
+    .sidebar-brand .titles h2 {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.02em;
+    }
+    .sidebar-brand .titles h2 span { color: var(--primary); }
+    .sidebar-brand .titles p {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    .sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+    .nav-group-label {
+      font-size: 0.63rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #475569;
+      letter-spacing: 0.08em;
+      padding: 0.75rem 0.75rem 0.25rem;
+    }
+
+    .side-nav-btn {
+      width: 100%;
+      background: transparent;
+      border: none;
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--sidebar-text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-align: left;
+    }
+    .side-nav-btn .btn-label {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .side-nav-btn i.main-icon {
+      font-size: 1.15rem;
+      color: #64748b;
+      transition: transform 0.18s;
+    }
+    .side-nav-btn:hover {
+      background: var(--sidebar-hover);
+      color: #f8fafc;
+    }
+    .side-nav-btn:hover i.main-icon {
+      color: var(--primary);
+      transform: scale(1.1);
+    }
+    .side-nav-btn.active {
+      background: linear-gradient(90deg, rgba(2, 132, 199, 0.2) 0%, rgba(2, 132, 199, 0.05) 100%);
+      color: #38bdf8;
+      border-left: 3px solid #38bdf8;
+    }
+    .side-nav-btn.active i.main-icon {
+      color: #38bdf8;
+    }
+
+    .side-accordion-menu {
+      display: none;
+      flex-direction: column;
+      gap: 0.2rem;
+      padding-left: 2rem;
+      margin: 0.2rem 0 0.4rem;
+    }
+    .side-accordion-menu.open { display: flex; }
+    .side-sub-link {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #94a3b8;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .side-sub-link:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+      padding-left: 0.95rem;
+    }
+
+    .chevron-icon {
+      font-size: 0.85rem;
+      transition: transform 0.2s ease;
+      color: #64748b;
+    }
+    .side-nav-btn.expanded .chevron-icon { transform: rotate(180deg); }
+
+    /* 📌 MAIN VIEW AREA */
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    /* TOP HEADER */
+    header.top-header {
+      height: var(--header-height);
+      background: var(--bg-card);
+      border-bottom: 1.5px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      flex-shrink: 0;
+      z-index: 50;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .header-left-tools {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .header-left-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+    .btn-icon {
+      background: var(--bg-page);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      transition: all 0.15s;
+    }
+    .btn-icon:hover {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+    .user-tag {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.8rem;
+      background: var(--bg-page);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+    .user-tag span.badge {
+      background: #0284c7;
+      color: #ffffff;
+      font-size: 0.62rem;
+      padding: 0.12rem 0.45rem;
+      border-radius: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    /* VIEWPORT */
+    .viewport {
+      flex: 1;
+      width: 100%;
+      height: calc(100vh - var(--header-height));
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .tab-content { display: none; width: 100%; height: 100%; }
+    .tab-content.active { display: flex !important; flex-direction: column; flex: 1; }
+
+    .dash-scroll-wrapper {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .dash-inner-container {
+      max-width: 1380px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* HERO BANNER */
+    .command-hero {
+      background: linear-gradient(135deg, var(--bg-card) 0%, rgba(2, 132, 199, 0.05) 100%);
+      border: 1.5px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.35rem 1.65rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.25rem;
+      box-shadow: var(--card-shadow);
+    }
+    .command-hero-info { display: flex; align-items: center; gap: 1rem; }
+    .command-hero-info img { width: 48px; height: 48px; object-fit: contain; border-radius: 8px; }
+    .command-hero-info h1 { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em; }
+    .command-hero-info p { font-size: 0.7rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.06em; }
+
+    .search-input-group { display: flex; gap: 0.5rem; flex: 1; max-width: 480px; }
+    .search-input-group input {
+      flex: 1;
+      background: var(--bg-page);
+      border: 1.5px solid var(--border-color);
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: var(--text-main);
+      outline: none;
+      transition: all 0.15s;
+    }
+    .search-input-group input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+    }
+    .search-input-group button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.25rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: background 0.15s;
+    }
+    .search-input-group button:hover { background: var(--primary-hover); }
+
+    /* KPI DECK */
+/* 📌 SLIM & COMPACT KPI DECK */
+    .kpi-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+      gap: 0.75rem; 
+    }
+    
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 9px;
+      padding: 0.65rem 0.85rem;
+      position: relative;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .kpi-head { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      font-size: 0.64rem; 
+      font-weight: 800; 
+      color: var(--text-muted); 
+      letter-spacing: 0.04em; 
+    }
+
+    .kpi-icon-pill {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+    }
+
+    .kpi-val { 
+      font-size: 1.35rem; 
+      font-weight: 800; 
+      margin: 0.2rem 0; 
+      font-family: 'JetBrains Mono', monospace; 
+      line-height: 1.1; 
+    }
+
+    .kpi-tags { 
+      display: flex; 
+      gap: 0.35rem; 
+      font-size: 0.62rem; 
+      font-weight: 800; 
+    }
+
+    .tag-pill-done { 
+      background: #dcfce7; 
+      color: #15803d; 
+      padding: 1px 5px; 
+      border-radius: 4px; 
+    }
+
+    .tag-pill-pend { 
+      background: #fef3c7; 
+      color: #b45309; 
+      padding: 1px 5px; 
+      border-radius: 4px; 
+    }
+
+    .kpi-bar { 
+      width: 100%; 
+      height: 3px; 
+      background: var(--border-color); 
+      border-radius: 2px; 
+      margin-top: 0.45rem; 
+      overflow: hidden; 
+    }
+
+    .kpi-bar-fill { 
+      height: 100%; 
+      width: 0%; 
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+
+    /* 📌 REDESIGNED WORKSPACE: 60% FEED STREAM VS 40% GRAPHS & CHAT */
+    .workspace-grid { 
+      display: grid; 
+      grid-template-columns: 1.35fr 1fr; 
+      gap: 1.4rem; 
+      align-items: start;
+    }
+    @media (max-width: 1100px) { 
+      .workspace-grid { grid-template-columns: 1fr; } 
+    }
+
+    .card-panel {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--card-shadow);
+    }
+    .card-panel-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* 🪟 MINI-WINDOW ACTIVITY FEED CARDS */
+    .live-feed-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-height: 720px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .live-feed-container::-webkit-scrollbar { width: 5px; }
+    .live-feed-container::-webkit-scrollbar-thumb { 
+      background: var(--border-color); 
+      border-radius: 4px; 
+    }
+
+    .feed-mini-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      position: relative;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .feed-mini-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+      border-color: var(--primary);
+    }
+    .feed-mini-card.type-sr { border-left: 4px solid #0284c7; }
+    .feed-mini-card.type-recon { border-left: 4px solid #d97706; }
+    .feed-mini-card.type-nsc { border-left: 4px solid #16a34a; }
+    .feed-mini-card.type-app { border-left: 4px solid #8b5cf6; }
+
+    .feed-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .feed-badge {
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+    .badge-sr { background: #e0f2fe; color: #0369a1; }
+    .badge-recon { background: #fef3c7; color: #b45309; }
+    .badge-nsc { background: #dcfce7; color: #15803d; }
+    .badge-app { background: #f3e8ff; color: #6b21a8; }
+
+    .feed-ref {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 0.82rem;
+      color: var(--text-main);
+    }
+    .feed-time {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .feed-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .feed-name {
+      font-weight: 700;
+      font-size: 0.84rem;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 320px;
+    }
+
+    textarea.broadcast-input {
+      width: 100%;
+      background: var(--bg-page);
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.65rem;
+      font-size: 0.78rem;
+      color: var(--text-main);
+      resize: none;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    textarea.broadcast-input:focus { border-color: var(--primary); }
+    .btn-submit-broadcast {
+      width: 100%;
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #ffffff;
+      border: none;
+      padding: 0.65rem;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.78rem;
+      cursor: pointer;
+      margin-top: 0.6rem;
+      transition: opacity 0.15s;
+    }
+    .btn-submit-broadcast:hover { opacity: 0.92; }
+
+    /* FULLSCREEN IFRAME WORKSPACE */
+    #tab-workspace {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-card);
+      overflow: hidden;
+      display: none;
+      position: relative;
+    }
+    iframe.fullscreen-iframe { width: 100%; height: 100%; border: none; display: block; }
+    .placeholder-center { text-align: center; margin: auto; color: var(--text-muted); }
+
+    /* SEARCH MODAL */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; z-index: 2000; padding: 1.25rem;
+    }
+    .modal-backdrop.active { display: flex !important; }
+    .modal-box {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-color);
+      border-radius: 14px; max-width: 850px; width: 100%; max-height: 85vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+    .modal-head { padding: 1.1rem 1.4rem; border-bottom: 1.5px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 1.25rem; overflow-y: auto; flex: 1; }
+
+    /* 🚨 CENTER RED BROADCAST POPUP */
+    .chat-popup-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      width: 90%;
+      max-width: 550px;
+      pointer-events: none;
+    }
+    .chat-popup-card {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      color: #ffffff;
+      border: 2px solid #fecaca;
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      font-size: 0.95rem;
+      pointer-events: auto;
+      box-shadow: 0 25px 50px -12px rgba(220, 38, 38, 0.65), 0 0 35px rgba(239, 68, 68, 0.5);
+      width: 100%;
+      animation: strikingPulse 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes strikingPulse {
+      0% { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+
+  <script>
+    if (window.self !== window.top) window.top.location.href = window.self.location.href;
+    (function() {
+      try {
+        const user = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
+        if (!user && !window.location.pathname.endsWith('login.html')) {
+          window.location.replace('login.html');
+        }
+        if (localStorage.getItem('pacd_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="app-layout">
+    
+    <!-- 📌 DARK COLLAPSIBLE SIDEBAR -->
+    <aside class="sidebar" id="appSidebar">
+      <div class="sidebar-brand" onclick="switchTab('tab-home', document.getElementById('btnTabHome'))">
+        <img src="/pacd+.png" alt="Logo" onerror="this.onerror=null; this.src='/pacd+.png';" />
+        <div class="titles">
+          <h2>SIWADI<span>PACD</span></h2>
+          <p>BY POWELL BAUTISTA</p>
+        </div>
+      </div>
+
+  <div class="sidebar-scroll">
+        <div class="nav-group-label">Overview</div>
+        
+        <!-- Dashboard -->
+        <button type="button" class="side-nav-btn active" id="btnTabHome" onclick="switchTab('tab-home', this)">
+          <div class="btn-label"><i class='bx bxs-dashboard main-icon'></i> Dashboard</div>
+        </button>
+
+        <div class="nav-group-label">Operations</div>
+
+        <!-- Commercial Accordion (May Kulay Bughaw/Sky Accent) -->
+        <div id="navContainerCommercial">
+          <button type="button" class="side-nav-btn" onclick="toggleSidebarMenu('menuCommercial', this)">
+            <div class="btn-label">
+              <i class='bx bxs-grid-alt main-icon' style="color: #38bdf8;"></i> 
+              <span style="color: #38bdf8; font-weight: 800;">Commercial</span>
+            </div>
+            <i class='bx bx-chevron-down chevron-icon'></i>
+          </button>
+          <div id="menuCommercial" class="side-accordion-menu">
+            <a class="side-sub-link" onclick="loadModule('/commercial/service-request.html')"><i class='bx bx-wrench' style="color:#38bdf8;"></i> Service Requests</a>
+            <a class="side-sub-link" onclick="loadModule('/commercial/reconnection.html')"><i class='bx bx-plug' style="color:#fbbf24;"></i> Reconnection</a>
+            <a class="side-sub-link" onclick="loadModule('/commercial/disconnection.html')"><i class='bx bx-power-off' style="color:#f87171;"></i> Disconnection</a>
+            <a class="side-sub-link" onclick="loadModule('/commercial/application.html')"><i class='bx bx-clipboard' style="color:#a78bfa;"></i> Service Application</a>
+            <a class="side-sub-link" onclick="loadModule('/commercial/new-service-connection.html')"><i class='bx bx-droplet' style="color:#34d399;"></i> New Connection</a>
+            <a class="side-sub-link" onclick="loadModule('/commercial/transfer.html')"><i class='bx bx-transfer' style="color:#60a5fa;"></i> Transfer Conn.</a>
+          </div>
+        </div>
+
+        <!-- Engineering Accordion (May Kulay Kahel/Amber Accent) -->
+        <div id="navContainerEngineering">
+          <button type="button" class="side-nav-btn" onclick="toggleSidebarMenu('menuEngineering', this)">
+            <div class="btn-label">
+              <i class='bx bxs-wrench main-icon' style="color: #fb923c;"></i> 
+              <span style="color: #fb923c; font-weight: 800;">Engineering</span>
+            </div>
+            <i class='bx bx-chevron-down chevron-icon'></i>
+          </button>
+          <div id="menuEngineering" class="side-accordion-menu">
+            <a class="side-sub-link" onclick="loadModule('/engineering/service-request-engr.html')"><i class='bx bx-wrench' style="color:#38bdf8;"></i> Service Request</a>
+            <a class="side-sub-link" onclick="loadModule('/engineering/reconnection-engr.html')"><i class='bx bx-plug' style="color:#fbbf24;"></i> Reconnection</a>
+            <a class="side-sub-link" onclick="loadModule('/engineering/new-connection-engr.html')"><i class='bx bx-droplet' style="color:#34d399;"></i> NSC Execution</a>
+            <a class="side-sub-link" onclick="loadModule('/engineering/accomplishments-engr.html')"><i class='bx bx-bar-chart-alt-2' style="color:#818cf8;"></i> Accomplishments</a>
+            <a class="side-sub-link" onclick="loadModule('/misc/plumbers-manager.html')"><i class='bx bx-group' style="color:#22d3ee;"></i> Plumbers Pool</a>
+            <a class="side-sub-link" onclick="loadModule('/misc/materials-manager.html')"><i class='bx bx-package' style="color:#34d399;"></i> Materials Pool</a>
+            <a class="side-sub-link" onclick="loadModule('/misc/request-actions-manager.html')"><i class='bx bx-check-square' style="color:#fbbf24;"></i> Request Actions</a>
+          </div>
+        </div>
+
+        <!-- Special Programs (Inilipat sa Ibaba) -->
+        <div class="nav-group-label">Special Programs</div>
+
+        <button type="button" class="side-nav-btn" id="btnTabGad" onclick="loadModule('/commercial/gad.html')">
+          <div class="btn-label"><i class='bx bx-heart main-icon' style="color:#ec4899;"></i> GAD's Corner</div>
+        </button>
+
+        <button type="button" class="side-nav-btn" id="btnTabSenior" onclick="loadModule('/commercial/senior-citizen.html')">
+          <div class="btn-label"><i class='bx bx-user-check main-icon' style="color:#f59e0b;"></i> Senior Citizen</div>
+        </button>
+
+        <button type="button" class="side-nav-btn" id="btnTabComplaints" onclick="loadModule('/commercial/online-complaints.html')">
+          <div class="btn-label"><i class='bx bx-error-circle main-icon' style="color:#ef4444;"></i> Online Complaints</div>
+        </button>
+
+        <button type="button" class="side-nav-btn" id="btnTabScheduler" onclick="loadModule('/others/calendar-scheduler.html')">
+          <div class="btn-label"><i class='bx bx-calendar-event main-icon' style="color:#38bdf8;"></i> Reading & Cut Schedule</div>
+        </button>
+
+        <div class="nav-group-label">Tools & Utilities</div>
+
+        <!-- Utilities Accordion -->
+        <div id="navContainerOthers">
+          <button type="button" class="side-nav-btn" onclick="toggleSidebarMenu('menuOthers', this)">
+            <div class="btn-label"><i class='bx bxs-folder-open main-icon'></i> Utilities</div>
+            <i class='bx bx-chevron-down chevron-icon'></i>
+          </button>
+          <div id="menuOthers" class="side-accordion-menu">
+            <a class="side-sub-link" onclick="loadModule('/others/raffle-winners.html')"><i class='bx bxs-trophy' style="color:#facc15;"></i> Winner Generator</a>
+            <a class="side-sub-link" onclick="loadModule('/others/bill-calculator.html')"><i class='bx bx-calculator' style="color:#38bdf8;"></i> Usage Calculator</a>
+            <a class="side-sub-link" onclick="loadModule('/others/compromise-agreement.html')"><i class='bx bx-file-blank' style="color:#fb923c;"></i> WB Comp</a>
+            <a class="side-sub-link" onclick="openExcelUploadModal()"><i class='bx bx-file' style="color:#4ade80;"></i> Upload Excel</a>
+            <a class="side-sub-link" onclick="loadModule('/misc/request-details-manager.html')"><i class='bx bx-slider-alt' style="color:#38bdf8;"></i> Request Details</a>
+            <a class="side-sub-link" onclick="loadModule('/misc/requirements-manager.html')"><i class='bx bx-list-check' style="color:#60a5fa;"></i> Requirements Pool</a>
+            <a class="side-sub-link" onclick="loadModule('/misc/coordinate-calibrator.html')"><i class='bx bx-crosshair' style="color:#c084fc;"></i> Coord. Calibrator</a>
+          </div>
+        </div>
+
+        <!-- Admin Tools Accordion -->
+        <div id="navContainerAdmin">
+          <button type="button" class="side-nav-btn" onclick="toggleSidebarMenu('menuAdmin', this)">
+            <div class="btn-label"><i class='bx bxs-cog main-icon'></i> System Admin</div>
+            <i class='bx bx-chevron-down chevron-icon'></i>
+          </button>
+          <div id="menuAdmin" class="side-accordion-menu">
+            <a class="side-sub-link" onclick="loadModule('/misc/users-manager.html')"><i class='bx bx-user-pin' style="color:#c084fc;"></i> User Accounts</a>
+            <a class="side-sub-link" onclick="loadModule('/misc/backup-restore.html')"><i class='bx bx-data' style="color:#34d399;"></i> Backup & Restore</a>
+
+            <!-- ⚡ IDAGDAG ITO PARA SA BILLING SYNC (Lilitaw lang sa ADMIN) -->
+            <a class="side-sub-link" onclick="loadModule('/admin/billing-sync.html')">
+              <i class='bx bx-mail-send' style="color:#f472b6;"></i> Billing Sync & Email
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- 📌 MAIN VIEWPORT -->
+    <div class="app-main">
+      
+      <!-- TOP HEADER -->
+      <header class="top-header">
+        <div class="header-left-tools">
+          <button type="button" class="btn-icon" onclick="toggleSidebar()" title="Toggle Sidebar">
+            <i class='bx bx-menu'></i>
+          </button>
+          <div class="header-left-title" id="activeViewTitle">
+            <i class='bx bxs-dashboard' style='color:var(--primary);'></i> Dashboard
+          </div>
+        </div>
+
+        <div class="top-controls">
+          <button type="button" class="btn-icon" id="btnEnableNotif" onclick="enableSystemAlerts(this)" title="Alerts & Sounds">
+            <i class='bx bx-bell'></i>
+          </button>
+          <button type="button" class="btn-icon" onclick="toggleBrowserFullscreen()" title="Fullscreen">
+            <i class='bx bx-fullscreen' id="fsIcon"></i>
+          </button>
+          <button type="button" class="btn-icon" onclick="toggleThemeMode()" title="Theme">
+            <i class='bx bx-moon' id="themeIcon"></i>
+          </button>
+          <button type="button" class="btn-icon" id="btnUniversalRefresh" onclick="triggerUniversalRefresh()" title="Sync Database">
+            <i class='bx bx-refresh' id="iconUniversalRefresh"></i>
+          </button>
+          
+          <div class="user-tag">
+            <i class='bx bxs-user-circle' style="color:var(--primary); font-size:1.1rem;"></i>
+            <span id="navUserDisplay">USER</span>
+            <span class="badge" id="navRoleDisplay">STAFF</span>
+          </div>
+
+          <button type="button" class="btn-icon" style="color:#ef4444;" onclick="handleLogout()" title="Logout">
+            <i class='bx bx-log-out'></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- WORKSPACE VIEWPORT -->
+      <main class="viewport">
+
+        <!-- TAB 1: DASHBOARD VIEW -->
+        <div id="tab-home" class="tab-content active">
+          <div class="dash-scroll-wrapper">
+            <div class="dash-inner-container">
+              
+              <!-- HERO STRIP -->
+              <div class="command-hero">
+                <div class="command-hero-info">
+                  <img src="/swdlogo.png" alt="SWD" onerror="this.onerror=null; this.src='/SWDLOGO.png';" />
+                  <div>
+                    <p>Siniloan Water District</p>
+                    <h1>PACD PLUS BY POWELL BAUTISTA</h1>
+                  </div>
+                </div>
+
+                <div class="search-input-group">
+                  <input type="text" id="dashQuickSearch" placeholder="Search Account #, Name, Ref #..." onkeypress="if(event.key==='Enter') openGlobalSearchPopup()" />
+                  <button type="button" onclick="openGlobalSearchPopup()"><i class='bx bx-search'></i> Search</button>
+                </div>
+              </div>
+
+              <!-- KPI METRICS -->
+              <div class="kpi-grid">
+                <div class="kpi-card">
+                  <div class="kpi-head">
+                    <span>SERVICE REQUESTS</span>
+                    <div class="kpi-icon-pill" style="background:#e0f2fe; color:#0284c7;"><i class='bx bx-wrench'></i></div>
+                  </div>
+                  <div class="kpi-val" id="valSRTotal" style="color:#0284c7;">0</div>
+                  <div class="kpi-tags">
+                    <span class="tag-pill-done"><b id="valSRCompleted">0</b> Done</span>
+                    <span class="tag-pill-pend"><b id="valSRPending">0</b> Pending</span>
+                  </div>
+                  <div class="kpi-bar"><div id="progBarSR" class="kpi-bar-fill" style="background:#0284c7;"></div></div>
+                </div>
+
+                <div class="kpi-card">
+                  <div class="kpi-head">
+                    <span>RECONNECTIONS</span>
+                    <div class="kpi-icon-pill" style="background:#fef3c7; color:#d97706;"><i class='bx bx-plug'></i></div>
+                  </div>
+                  <div class="kpi-val" id="valReconTotal" style="color:#d97706;">0</div>
+                  <div class="kpi-tags">
+                    <span class="tag-pill-done"><b id="valReconCompleted">0</b> Done</span>
+                    <span class="tag-pill-pend"><b id="valReconPending">0</b> Pending</span>
+                  </div>
+                  <div class="kpi-bar"><div id="progBarRecon" class="kpi-bar-fill" style="background:#d97706;"></div></div>
+                </div>
+
+                <div class="kpi-card">
+                  <div class="kpi-head">
+                    <span>NEW CONNECTIONS</span>
+                    <div class="kpi-icon-pill" style="background:#dcfce7; color:#16a34a;"><i class='bx bx-droplet'></i></div>
+                  </div>
+                  <div class="kpi-val" id="valNSCTotal" style="color:#16a34a;">0</div>
+                  <div class="kpi-tags">
+                    <span class="tag-pill-done"><b id="valNSCCompleted">0</b> Done</span>
+                    <span class="tag-pill-pend"><b id="valNSCPending">0</b> Pending</span>
+                  </div>
+                  <div class="kpi-bar"><div id="progBarNSC" class="kpi-bar-fill" style="background:#16a34a;"></div></div>
+                </div>
+
+                <div class="kpi-card">
+                  <div class="kpi-head">
+                    <span>DATABASE ENGINE</span>
+                    <div class="kpi-icon-pill" style="background:#f1f5f9; color:#475569;"><i class='bx bx-server'></i></div>
+                  </div>
+                  <div class="kpi-val" style="color:#10b981;" id="dashHealthStatus">ONLINE</div>
+                  <div class="kpi-tags">
+                    <span style="color:var(--text-muted);">Firebird B-Tree Cluster Active</span>
+                  </div>
+                  <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%; background:#10b981;"></div></div>
+                </div>
+              </div>
+
+              <!-- 📌 SPLIT WORKSPACE SECTION -->
+              <div class="workspace-grid">
+                
+                <!-- 👈 LEFT SIDE: LIVE FEEDS NA MAY KANYA-KANYANG MINI-WINDOW -->
+                <div>
+                  <div class="card-panel" style="margin-bottom: 0;">
+                    <div class="card-panel-title">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow:0 0 8px #10b981;"></span>
+                        <span>Live Transaction Stream</span>
+                      </div>
+                      <button type="button" class="btn-icon" style="width:28px; height:28px; font-size:0.9rem;" onclick="loadDashboardData()" title="I-refresh ang Feeds">
+                        <i class='bx bx-refresh'></i>
+                      </button>
+                    </div>
+
+                    <!-- Mini-cards container -->
+                    <div class="live-feed-container" id="recentTableBody">
+                      <div style="text-align:center; padding: 2rem; color: var(--text-muted); font-size: 0.8rem;">
+                        Kinukuha ang pinakabagong transaction stream...
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 👉 RIGHT SIDE: LAHAT NG SUMMARY (GRAPHS) AT DESK BROADCAST -->
+                <div>
+                  <!-- Graph 1: Monthly Complaints Volume Trend -->
+                  <div class="card-panel">
+                    <div class="card-panel-title">Monthly Complaints Volume Trend</div>
+                    <div style="height: 185px;"><canvas id="barChartComplaints"></canvas></div>
+                  </div>
+
+                  <!-- Graph 2: Resolution Ratio Performance -->
+                  <div class="card-panel">
+                    <div class="card-panel-title">Resolution Ratio Performance</div>
+                    <div style="height: 185px;"><canvas id="barChartRatio"></canvas></div>
+                  </div>
+
+                  <!-- Broadcast Messaging Box -->
+                  <div class="card-panel">
+                    <div class="card-panel-title">
+                      <span>Desk Broadcast</span>
+                      <span style="color:#10b981; font-weight: 800;">● Active</span>
+                    </div>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.6rem;">Magpadala ng striking alert sa lahat ng naka-connect na PACD stations.</p>
+                    <textarea id="dashChatInput" rows="3" class="broadcast-input" placeholder="I-type ang broadcast alert dito..." onkeypress="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendRealtimeChat(); }"></textarea>
+                    <button type="button" class="btn-submit-broadcast" onclick="sendRealtimeChat()">
+                      <i class='bx bx-send'></i> Send Broadcast
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: SEAMLESS FULLSCREEN MODULE WORKSPACE -->
+        <div id="tab-workspace" class="tab-content">
+          <div id="wsPlaceholder" class="placeholder-center">
+            <i class='bx bxs-droplet' style="font-size:3.5rem; color:var(--primary);"></i>
+            <h3 style="font-size:1.1rem; margin-top:0.5rem;">PACD Workspace Ready</h3>
+            <p style="font-size:0.8rem;">Pumili ng module sa sidebar sa kaliwa.</p>
+          </div>
+          <iframe id="wsIframe" class="fullscreen-iframe" style="display: none;"></iframe>
+        </div>
+
+        <div id="chatPopupContainer" class="chat-popup-container"></div>
+      </main>
+    </div>
+
+  </div>
+
+  <!-- GLOBAL SEARCH MODAL -->
+  <div id="searchModalOverlay" class="modal-backdrop" onclick="closeSearchModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <h3 style="font-size:1rem; font-weight:800; color:var(--primary);">Global Search Results</h3>
+          <span style="font-size:0.75rem; color:var(--text-muted);" id="searchModalSubtitle">Naghahanap...</span>
+        </div>
+        <button class="btn-icon" onclick="closeSearchModal()"><i class='bx bx-x'></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Reference #</th>
+                <th>Account #</th>
+                <th>Name</th>
+                <th>Meter #</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="globalSearchTableBody">
+              <tr><td colspan="6" style="text-align:center; padding:1.5rem;">I-type ang hahanapin at pindutin ang enter.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/excel-modal.js"></script>
+
+  <!-- APPLICATION LOGIC CONTROLLER -->
+  <script>
+    let barChartInstance = null;
+    let ratioChartInstance = null;
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('appSidebar');
+      if (sidebar) sidebar.classList.toggle('collapsed');
+    }
+
+    function toggleSidebarMenu(menuId, btnElem) {
+      const menu = document.getElementById(menuId);
+      const isExpanded = btnElem.classList.contains('expanded');
+
+      document.querySelectorAll('.side-accordion-menu').forEach(m => {
+        if (m.id !== menuId) m.classList.remove('open');
+      });
+      document.querySelectorAll('.side-nav-btn').forEach(b => {
+        if (b !== btnElem) b.classList.remove('expanded');
+      });
+
+      if (isExpanded) {
+        menu.classList.remove('open');
+        btnElem.classList.remove('expanded');
+      } else {
+        menu.classList.add('open');
+        btnElem.classList.add('expanded');
+      }
+    }
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.side-nav-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      if (el) el.classList.add('active');
+      const target = document.getElementById(tabId);
+      if (target) target.classList.add('active');
+
+      const titleEl = document.getElementById('activeViewTitle');
+      const sidebar = document.getElementById('appSidebar');
+
+      if (tabId === 'tab-home') {
+        if (titleEl) titleEl.innerHTML = "<i class='bx bxs-dashboard' style='color:var(--primary);'></i> Dashboard";
+        if (sidebar) sidebar.classList.remove('collapsed');
+        loadDashboardData();
+      }
+    }
+
+    function loadModule(url) {
+      let targetTab = null;
+
+      if (url.includes('/commercial/senior-citizen.html')) targetTab = document.getElementById('btnTabSenior');
+      else if (url.includes('/commercial/gad.html')) targetTab = document.getElementById('btnTabGad');
+      else if (url.includes('/commercial/online-complaints.html')) targetTab = document.getElementById('btnTabComplaints');
+      else {
+        document.querySelectorAll('.side-nav-btn').forEach(b => b.classList.remove('active'));
+      }
+
+      switchTab('tab-workspace', targetTab);
+
+      const sidebar = document.getElementById('appSidebar');
+      if (sidebar) sidebar.classList.add('collapsed');
+
+      const placeholder = document.getElementById('wsPlaceholder');
+      const iframe = document.getElementById('wsIframe');
+      const titleEl = document.getElementById('activeViewTitle');
+
+      let modName = "Module Workspace";
+      if (url.includes('service-request')) modName = "Service Requests";
+      else if (url.includes('reconnection')) modName = "Reconnection Module";
+      else if (url.includes('disconnection')) modName = "Disconnection Module";
+      else if (url.includes('application')) modName = "Service Application";
+      else if (url.includes('new-service-connection')) modName = "New Service Connection";
+      else if (url.includes('transfer')) modName = "Transfer of Connection";
+      else if (url.includes('gad')) modName = "GAD's Corner";
+      else if (url.includes('senior-citizen')) modName = "Senior Citizen Discount";
+      else if (url.includes('online-complaints')) modName = "Online Complaints Manager";
+      else if (url.includes('calendar-scheduler')) modName = "Meter Reading & Disconnection Schedule";
+      else if (url.includes('users-manager')) modName = "User Accounts Management";
+      else if (url.includes('backup-restore')) modName = "Database Backup & Restore";
+      else if (url.includes('request-details')) modName = "Request Details Config";
+      else if (url.includes('request-actions')) modName = "Request Actions Config";
+      else if (url.includes('requirements-manager')) modName = "Requirements Manager";
+      else if (url.includes('plumbers-manager')) modName = "Plumbers Pool";
+      else if (url.includes('materials-manager')) modName = "Materials Pool";
+      else if (url.includes('coordinate-calibrator')) modName = "Print Coordinates Calibrator";
+
+      if (titleEl) titleEl.innerHTML = `<i class='bx bx-window' style='color:var(--primary);'></i> ${modName}`;
+
+      if (placeholder) placeholder.style.display = 'none';
+      if (iframe) {
+        iframe.style.display = 'block';
+        iframe.src = url;
+      }
+    }
+
+    function toggleBrowserFullscreen() {
+      const fsIcon = document.getElementById('fsIcon');
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+          if (fsIcon) fsIcon.className = 'bx bx-exit-fullscreen';
+        }).catch(err => console.error(err));
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().then(() => {
+            if (fsIcon) fsIcon.className = 'bx bx-fullscreen';
+          });
+        }
+      }
+    }
+
+    function toggleThemeMode() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const next = isDark ? 'light' : 'dark';
+      if (next === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('themeIcon').className = 'bx bx-sun';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('themeIcon').className = 'bx bx-moon';
+      }
+      localStorage.setItem('pacd_theme', next);
+    }
+
+    function applyRolePermissions() {
+      const userJson = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
+      if (!userJson) return;
+
+      const user = JSON.parse(userJson);
+      const role = String(user.ROLE || user.role || '').toUpperCase().trim();
+      const division = String(user.DIVISION || user.division || '').toUpperCase().trim();
+      const name = user.FULL_NAME || user.full_name || user.USERNAME || user.username || 'USER';
+
+      document.getElementById('navUserDisplay').textContent = name.toUpperCase();
+      document.getElementById('navRoleDisplay').textContent = role || division || 'STAFF';
+
+      const seniorBtn = document.getElementById('btnTabSenior');
+      const complaintsBtn = document.getElementById('btnTabComplaints');
+      const commContainer = document.getElementById('navContainerCommercial');
+      const engrContainer = document.getElementById('navContainerEngineering');
+      const othersContainer = document.getElementById('navContainerOthers');
+      const adminContainer = document.getElementById('navContainerAdmin');
+
+      const isAdmin = role === 'ADMIN' || division === 'ADMIN' || role === 'SUPERADMIN';
+      const isEngineering = role === 'ENGINEERING' || division === 'ENGINEERING' || role === 'ENGR';
+
+      if (isAdmin) {
+        if (seniorBtn) seniorBtn.style.display = '';
+        if (complaintsBtn) complaintsBtn.style.display = '';
+        if (commContainer) commContainer.style.display = '';
+        if (engrContainer) engrContainer.style.display = '';
+        if (othersContainer) othersContainer.style.display = '';
+        if (adminContainer) adminContainer.style.display = '';
+      } else if (isEngineering) {
+        if (seniorBtn) seniorBtn.style.display = 'none';
+        if (complaintsBtn) complaintsBtn.style.display = 'none';
+        if (commContainer) commContainer.style.display = 'none';
+        if (engrContainer) engrContainer.style.display = '';
+        if (othersContainer) othersContainer.style.display = 'none';
+        if (adminContainer) adminContainer.style.display = 'none';
+      } else {
+        if (seniorBtn) seniorBtn.style.display = '';
+        if (complaintsBtn) complaintsBtn.style.display = '';
+        if (commContainer) commContainer.style.display = '';
+        if (engrContainer) engrContainer.style.display = 'none';
+        if (othersContainer) othersContainer.style.display = '';
+        if (adminContainer) adminContainer.style.display = 'none';
+      }
+    }
+
+    async function loadDashboardData() {
+      try {
+        const res = await fetch('/api/analytics/summary');
+        if (!res.ok) return;
+        const json = await res.json();
+        
+        if (json.success && json.data) {
+          const { metrics, monthly, recent } = json.data;
+
+          document.getElementById('valSRTotal').textContent = metrics.srTotal || 0;
+          document.getElementById('valSRCompleted').textContent = metrics.srCompleted || 0;
+          document.getElementById('valSRPending').textContent = metrics.srPending || 0;
+
+          document.getElementById('valReconTotal').textContent = metrics.reconTotal || 0;
+          document.getElementById('valReconCompleted').textContent = metrics.reconCompleted || 0;
+          document.getElementById('valReconPending').textContent = metrics.reconPending || 0;
+
+          document.getElementById('valNSCTotal').textContent = metrics.nscTotal || 0;
+          document.getElementById('valNSCCompleted').textContent = metrics.nscCompleted || 0;
+          document.getElementById('valNSCPending').textContent = metrics.nscPending || 0;
+
+          if (metrics.srTotal > 0) document.getElementById('progBarSR').style.width = Math.round((metrics.srCompleted / metrics.srTotal) * 100) + '%';
+          if (metrics.reconTotal > 0) document.getElementById('progBarRecon').style.width = Math.round((metrics.reconCompleted / metrics.reconTotal) * 100) + '%';
+          if (metrics.nscTotal > 0) document.getElementById('progBarNSC').style.width = Math.round((metrics.nscCompleted / metrics.nscTotal) * 100) + '%';
+
+          renderMonthlyChart(monthly || []);
+          renderResolutionBarChart(metrics);
+          renderRecentTable(recent || []);
+        }
+      } catch (err) {
+        console.error('Error loading dashboard:', err);
+      }
+    }
+
+    function renderMonthlyChart(monthlyData) {
+      const el = document.getElementById('barChartComplaints');
+      if (!el) return;
+      const ctx = el.getContext('2d');
+      if (barChartInstance) barChartInstance.destroy();
+
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const counts = Array(12).fill(0);
+      monthlyData.forEach(row => {
+        const mIndex = parseInt(row.MO, 10) - 1;
+        if (mIndex >= 0 && mIndex < 12) counts[mIndex] = row.CNT || 0;
+      });
+
+      barChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: monthNames,
+          datasets: [{
+            data: counts,
+            borderColor: '#0284c7',
+            backgroundColor: 'rgba(2, 132, 199, 0.1)',
+            fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 4, pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { font: { size: 9 }, precision: 0 } },
+            x: { ticks: { font: { size: 9 } } }
+          }
+        }
+      });
+    }
+
+    function renderResolutionBarChart(metrics) {
+      const el = document.getElementById('barChartRatio');
+      if (!el) return;
+      const ctx = el.getContext('2d');
+      if (ratioChartInstance) ratioChartInstance.destroy();
+
+      ratioChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['SR', 'Recon', 'NSC'],
+          datasets: [
+            { label: 'Done', data: [metrics.srCompleted || 0, metrics.reconCompleted || 0, metrics.nscCompleted || 0], backgroundColor: '#10b981', borderRadius: 5 },
+            { label: 'Pending', data: [metrics.srPending || 0, metrics.reconPending || 0, metrics.nscPending || 0], backgroundColor: '#f59e0b', borderRadius: 5 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 9, weight: 'bold' } } } },
+          scales: {
+            y: { beginAtZero: true, ticks: { font: { size: 9 } } },
+            x: { ticks: { font: { size: 9 } } }
+          }
+        }
+      });
+    }
+
+    /* 🪟 MINI-CARD WINDOWS GENERATOR PARA SA LIVE STREAM */
+    function renderRecentTable(list) {
+      const container = document.getElementById('recentTableBody');
+      if (!container) return;
+      if (!list || list.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:2.5rem; color:var(--text-muted); font-size:0.82rem;">
+            Walang aktibong transaksyon sa stream.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(item => {
+        const isDone = ['COMPLETED', 'RECONNECTED', 'INSTALLED'].includes((item.STATUS || '').toUpperCase());
+        const typeStr = (item.TYPE || 'SERVICE REQUEST').toUpperCase();
+
+        let typeClass = 'type-sr';
+        let badgeClass = 'badge-sr';
+        let icon = 'bx-wrench';
+
+        if (typeStr.includes('RECONNECTION')) {
+          typeClass = 'type-recon';
+          badgeClass = 'badge-recon';
+          icon = 'bx-plug';
+        } else if (typeStr.includes('NEW') || typeStr.includes('NSC')) {
+          typeClass = 'type-nsc';
+          badgeClass = 'badge-nsc';
+          icon = 'bx-droplet';
+        } else if (typeStr.includes('APP')) {
+          typeClass = 'type-app';
+          badgeClass = 'badge-app';
+          icon = 'bx-clipboard';
+        }
+
+        return `
+          <div class="feed-mini-card ${typeClass}">
+            <div class="feed-header">
+              <div style="display: flex; align-items: center; gap: 7px;">
+                <span class="feed-badge ${badgeClass}"><i class='bx ${icon}'></i> ${item.TYPE || 'REQUEST'}</span>
+                <span class="feed-ref">${item.REF || '-'}</span>
+              </div>
+              <span class="feed-time"><i class='bx bx-time-five'></i> ${item.TX_DATE || 'Today'}</span>
+            </div>
+            <div class="feed-body">
+              <div class="feed-name" title="${item.NAME || ''}">
+                <i class='bx bx-user' style="color:var(--text-muted);"></i> ${item.NAME || '-'}
+              </div>
+              <span class="${isDone ? 'tag-pill-done' : 'tag-pill-pend'}">${item.STATUS || 'PENDING'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function triggerUniversalRefresh() {
+      const btn = document.getElementById('btnUniversalRefresh');
+      const icon = document.getElementById('iconUniversalRefresh');
+      if (icon) icon.style.transform = 'rotate(360deg)';
+      if (btn) btn.disabled = true;
+
+      try {
+        await loadDashboardData();
+        const iframe = document.getElementById('wsIframe');
+        if (iframe && iframe.style.display !== 'none' && iframe.contentWindow) {
+          try {
+            if (typeof iframe.contentWindow.loadDataPool === 'function') await iframe.contentWindow.loadDataPool();
+            else iframe.contentWindow.location.reload();
+          } catch (e) { iframe.src = iframe.src; }
+        }
+      } finally {
+        setTimeout(() => { 
+          if (btn) btn.disabled = false; 
+          if (icon) icon.style.transform = 'none';
+        }, 500);
+      }
+    }
+
+    async function openGlobalSearchPopup() {
+      const q = document.getElementById('dashQuickSearch').value.trim();
+      if (!q) return alert('Maglagay ng Account No., Pangalan, Ref #, o Meter #.');
+
+      const modal = document.getElementById('searchModalOverlay');
+      const subtitle = document.getElementById('searchModalSubtitle');
+      const tbody = document.getElementById('globalSearchTableBody');
+
+      modal.classList.add('active');
+      subtitle.textContent = `Naghahanap para sa: "${q}"...`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem;">Kinukuha ang data...</td></tr>`;
+
+      try {
+        const res = await fetch(`/api/analytics/global-search?q=${encodeURIComponent(q)}`);
+        const json = await res.json();
+        if (json.success && json.data && json.data.length > 0) {
+          subtitle.textContent = `${json.data.length} resulta ang nahanap.`;
+          tbody.innerHTML = json.data.map(row => {
+            const isDone = ['COMPLETED', 'RECONNECTED', 'INSTALLED'].includes((row.STATUS || '').toUpperCase());
+            return `
+              <tr>
+                <td style="font-weight:800; color:#0284c7;">${row.MODULE_TYPE}</td>
+                <td style="font-family:'JetBrains Mono', monospace; font-weight:700;">${row.REF_NO || '-'}</td>
+                <td>${row.ACCOUNT_NO || '-'}</td>
+                <td style="font-weight:700;">${row.ACCOUNT_NAME || '-'}</td>
+                <td style="font-family:'JetBrains Mono', monospace;">${row.METER_NO || '-'}</td>
+                <td><span class="${isDone ? 'tag-pill-done' : 'tag-pill-pend'}">${row.STATUS || 'PENDING'}</span></td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:#ef4444;">Walang tugmang record.</td></tr>`;
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:#ef4444;">May error sa paghahanap.</td></tr>`;
+      }
+    }
+
+    function closeSearchModal(e) {
+      if (!e || e.target.id === 'searchModalOverlay' || e.target.closest('.btn-icon')) {
+        document.getElementById('searchModalOverlay').classList.remove('active');
+      }
+    }
+
+    function handleLogout() {
+      if (confirm('Nais mo bang mag-logout?')) {
+        sessionStorage.clear();
+        localStorage.clear();
+        window.location.href = 'login.html';
+      }
+    }
+
+    function openExcelUploadModal() {
+      if (typeof openExcelUpload === 'function') openExcelUpload();
+      else alert('Nilo-load pa ang component.');
+    }
+
+    /* 🚨 Socket Broadcast Listener - Center Striking Alert */
+    const socket = io();
+    socket.on('receive_global_chat', (data) => {
+      const container = document.getElementById('chatPopupContainer');
+      if (!container) return;
+
+      const card = document.createElement('div');
+      card.className = 'chat-popup-card';
+      card.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1.5px solid rgba(255,255,255,0.25); padding-bottom:8px; margin-bottom:10px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <i class='bx bxs-bell-ring' style="font-size:1.4rem; color:#fef08a;"></i>
+            <span style="font-size:0.85rem; font-weight:900; letter-spacing:0.05em; text-transform:uppercase; color:#fff;">
+              DESK BROADCAST: ${data.sender}
+            </span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:0.75rem; font-weight:700; opacity:0.85;">${data.time}</span>
+            <button onclick="this.closest('.chat-popup-card').remove()" style="background:transparent; border:none; color:#fff; cursor:pointer; font-size:1.2rem; display:flex; align-items:center;"><i class='bx bx-x'></i></button>
+          </div>
+        </div>
+        <div style="font-size:1.05rem; font-weight:700; line-height:1.4; word-break:break-word; text-shadow:0 1px 2px rgba(0,0,0,0.4);">
+          ${data.message}
+        </div>
+      `;
+      container.appendChild(card);
+      setTimeout(() => { if (card.parentNode) card.remove(); }, 9000);
+    });
+
+    function sendRealtimeChat() {
+      const input = document.getElementById('dashChatInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const userJson = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
+      let senderName = 'USER';
+      if (userJson) {
+        const u = JSON.parse(userJson);
+        senderName = (u.FULL_NAME || u.USERNAME || 'USER').split(' ')[0];
+      }
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      socket.emit('send_global_chat', { sender: senderName, message: msg, time: timeStr });
+      input.value = '';
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.data === 'GO_TO_DASHBOARD' || event.data?.action === 'GO_TO_DASHBOARD') {
+        switchTab('tab-home', document.getElementById('btnTabHome'));
+      }
+    });
+
+    // ============================================================
+    // 🚨 PERSISTENT ONLINE COMPLAINTS NOTIFICATIONS
+    // ============================================================
+    const SB_RT_URL = 'https://eavuwdjjmofxuwhtompp.supabase.co';
+    const SB_RT_KEY = 'sb_publishable_kRq0ET-3jP4Ul6DoGSxjrQ_GqmVdPaI';
+    const sbRealtime = window.supabase.createClient(SB_RT_URL, SB_RT_KEY);
+
+    let persistentReminderTimer = null;
+
+    function isEligibleUser() {
+      const userJson = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
+      if (!userJson) return false;
+
+      const user = JSON.parse(userJson);
+      const role = String(user.ROLE || user.role || '').toUpperCase().trim();
+      const division = String(user.DIVISION || user.division || '').toUpperCase().trim();
+
+      return (
+        role === 'ADMIN' || 
+        division === 'ADMIN' || 
+        role === 'SUPERADMIN' || 
+        role === 'COMMERCIAL' || 
+        division === 'COMMERCIAL'
+      );
+    }
+
+    // 1. Tagasuri ng lahat ng reklamo na HINDI PA NABABASA (is_read = false)
+    async function checkUnreadComplaints(playAudio = false) {
+      if (!isEligibleUser()) return;
+
+      try {
+        const { data, error } = await sbRealtime
+          .from('complaints')
+          .select('*')
+          .eq('is_read', false)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          showPersistentPopup(data, playAudio);
+        } else {
+          // Kung nabasa na lahat, linisin ang popup
+          const container = document.getElementById('chatPopupContainer');
+          if (container) container.innerHTML = '';
+        }
+      } catch (err) {
+        console.error('Check unread complaints error:', err);
+      }
+    }
+
+    // 2. Ipakita ang persistent popup sa screen
+    function showPersistentPopup(unreadList, playAudio = false) {
+      const container = document.getElementById('chatPopupContainer');
+      if (!container) return;
+
+      if (playAudio) {
+        const audio = document.getElementById('pacdAlertAudio');
+        if (audio) {
+          audio.currentTime = 0;
+          audio.play().catch(e => console.log('Audio autoplay blocked:', e));
+        }
+      }
+
+      container.innerHTML = ''; // Linisin muna
+
+      const count = unreadList.length;
+      const latest = unreadList[0];
+
+      const card = document.createElement('div');
+      card.className = 'chat-popup-card';
+      card.style.background = 'linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%)';
+      card.style.border = '2px solid #f87171';
+      card.style.boxShadow = '0 20px 40px rgba(185, 28, 28, 0.6)';
+
+      card.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1.5px solid rgba(255,255,255,0.25); padding-bottom:8px; margin-bottom:10px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <i class='bx bxs-bell-ring' style="font-size:1.4rem; color:#fef08a; animation: pulse 1s infinite;"></i>
+            <span style="font-size:0.85rem; font-weight:900; letter-spacing:0.05em; text-transform:uppercase; color:#fff;">
+              🚨 MAY ${count} DI PA NABABASANG COMPLAINT!
+            </span>
+          </div>
+          <button onclick="dismissNotificationTemporarily()" title="I-minimize pansamantala" style="background:transparent; border:none; color:#fff; cursor:pointer; font-size:1.2rem; display:flex; align-items:center;">
+            <i class='bx bx-x'></i>
+          </button>
+        </div>
+
+        <div style="margin-bottom: 6px;">
+          <strong style="color:#fef08a; font-family:'JetBrains Mono';">${latest.reference_no || '-'}</strong> 
+          <span style="opacity:0.85;">| Acc: ${latest.account_no || 'N/A'}</span>
+        </div>
+
+        <div style="font-weight:700; font-size:0.92rem; margin-bottom: 6px;">
+          👤 ${latest.account_name || 'Anonymous'} (📱 ${latest.contact_no || 'No Contact'})
+        </div>
+
+        <div style="font-size:0.82rem; line-height:1.4; background:rgba(0,0,0,0.3); padding:8px 10px; border-radius:6px; max-height:80px; overflow-y:auto;">
+          ${latest.complaint_details || 'Walang detalye'}
+        </div>
+
+        ${count > 1 ? `<div style="font-size:0.75rem; color:#fef08a; margin-top:6px; font-weight:700;">+ May iba pang ${count - 1} unread report(s) sa listahan.</div>` : ''}
+
+        <div style="margin-top: 12px; display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:0.7rem; opacity:0.8;">Hanggat di binubuksan, patuloy itong magpapaalala.</span>
+          <button onclick="openAndReadComplaints()" 
+                  style="background:#fff; color:#b91c1c; border:none; border-radius:6px; padding:7px 14px; font-weight:800; font-size:0.78rem; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.2);">
+            Buksan at Basahin →
+          </button>
+        </div>
+      `;
+
+      container.appendChild(card);
+    }
+
+    function dismissNotificationTemporarily() {
+      const container = document.getElementById('chatPopupContainer');
+      if (container) container.innerHTML = '';
+    }
+
+    function openAndReadComplaints() {
+      dismissNotificationTemporarily();
+      loadModule('/commercial/online-complaints.html');
+    }
+
+  function initRealtimeComplaints() {
+        if (!isEligibleUser()) return;
+
+        // 1. Tumingin agad ng unread reports sa unang pasok o pagka-login
+        checkUnreadComplaints(true);
+
+        // 2. Persistent interval check: Tuwing 10 MINUTO (600000ms) na lang
+        if (persistentReminderTimer) clearInterval(persistentReminderTimer);
+        persistentReminderTimer = setInterval(() => {
+          checkUnreadComplaints(false); // ← Huwag nang mag-play ng audio sa interval
+        }, 600000); // ← 10 minuto = 600,000 ms
+
+        // 3. Makinig lang sa mga BAGONG complaints (INSERT) — hindi sa UPDATE/DELETE
+        sbRealtime
+          .channel('public:complaints')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'complaints' }, () => {
+            checkUnreadComplaints(true);
+          })
+          .subscribe();
+      }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      applyRolePermissions();
+      loadDashboardData();
+      initRealtimeComplaints();
+    });
+  </script>
+
+  <!-- Notification Audio & Scripts -->
+  <audio id="pacdAlertAudio" preload="auto">
+    <source src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18AAAAAAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn8=" type="audio/wav">
+  </audio>
+
+  <script src="/shared/live-notifications.js"></script>
+</body>
+</html>
